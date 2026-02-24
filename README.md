@@ -1,4 +1,7 @@
 # CAMBIUM_Sp26
 Mosquito
-What is up guys this is nick glad to be here
-d: ) 
+Coordinates for bounding box:
+West: -112.573997704
+North: 33.7987N
+East: -111.5837
+South: 33.2043
