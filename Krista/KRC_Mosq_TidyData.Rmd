@@ -1,0 +1,14 @@
+---
+title: "KRC_Mosq_TidyData"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(leaflet)
+```
+
+```{r}
+mosquito_data <- read.csv("mosquito_data.csv", row.names = 1)
+```
+
