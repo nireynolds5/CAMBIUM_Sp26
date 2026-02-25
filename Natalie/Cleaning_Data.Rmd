@@ -1,0 +1,22 @@
+---
+title: "Filtering_Data"
+output: html_document
+date: "2026-02-25"
+---
+
+Loading packages
+```{r}
+library(tidyverse)
+```
+
+```{r}
+#loading the data
+mosq_data <- read.csv("Data/mosquito_data.csv")
+
+#filtering to what I want
+mosq_data_na <- na.omit(mosq_data) #remove na
+
+mosq_species<- filter(mosq_data_na, column_name+)
+
+```
+
