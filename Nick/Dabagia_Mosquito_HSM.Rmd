@@ -1,0 +1,388 @@
+---
+title: "NJD_Mosquito_HSM"
+author: "Nick Dabagia"
+date: "2026-02-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# functions
+```{r}
+library(tidyverse)
+library(lubridate)
+library(randomForest)   # Random Forest algorithm
+library(dismo)          # Core SDM functions
+library(raster)         # Spatial data handling
+library(sp)             # Spatial data classes
+```
+# read in data
+```{r}
+setwd("/Users/ndabagia/Desktop/classes//GlobalChange/HSM_mosquito/Intro_to_the_dataset")
+mosquito_data <- read.csv("mosquito_data.csv", row.names=1)
+
+```
+
+
+Hmmmm...this picture is incomplete with the NAs
+
+```{r}
+#Use na.rm = TRUE to filter them out
+mosquito_data %>% 
+  group_by(Species) %>% 
+  summarize(Males = sum(Males, na.rm = TRUE), Females = sum(Females, na.rm = TRUE))
+
+# FILTER OUT ALL MOSQS THAT AREN'T CULEX OR AEDES
+
+species_int <- mosquito_data |>
+  filter(Species == "Aedes aegypti" | 
+           Species == "Culex tarsalis"|
+           Species == "Culex quinquefasciatus")
+
+# add a week column to 1-52 mosquito dataset
+species_int <- species_int %>%
+  mutate(
+    Date = as.Date(Date),
+    Week = isoweek(Date)
+  ) %>%
+  relocate(Week, .after = 1)
+
+# make a bounding box to filter the observations to bounded box for Maricopa county/metro phoenix
+# West: -112.573997704 North: 33.7987N East: -111.5837 South: 33.2043
+maricopa_obs <- species_int |>
+  filter(Latitude >= 33.2043 & Latitude <= 33.7987,
+         Longitude <= -111.5837 & Longitude  >=  -112.573997704
+)
+
+```
+
+#________________
+# below this line is future stuff, so ignore
+#__________________
+
+### Add in environmental variables here
+```{r}
+# commence with the modeling
+
+# Define study extent based on occurrence data
+# Add buffer around points
+lon_range <- range(maricopa_obs$Longitude)
+lat_range <- range(maricopa_obs$Latitude)
+buffer <- 2  # degrees
+
+study_extent <- extent(lon_range[1] - buffer, lon_range[2] + buffer,
+                      lat_range[1] - buffer, lat_range[2] + buffer)
+
+# Crop climate data to study area
+bioclim_crop <- crop(bioclim_data, study_extent)
+
+
+print(names(bioclim_crop))
+######
+
+
+```
+
+```{r}
+## EXERCISE 4: Preparing Training Data 
+
+# Convert occurrence coordinates to spatial points
+coords_sp <- SpatialPoints(coords_filtered, 
+                           proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+# Convert SpatialPoints to terra's SpatVector
+coords_vect <- vect(coords_sp)
+
+# Extract environmental values at presence locations
+presence_env <- extract(env_vars, coords_vect)
+
+# Remove any presences with missing environmental data
+presence_complete <- coords_filtered[complete.cases(presence_env), ]
+presence_env <- presence_env[complete.cases(presence_env), ]
+
+nrow(presence_complete) # FInal number of presence points
+
+# Generate pseudo-absence (background) points
+# We'll use 10x the number of presences (common practice)
+n_background <- nrow(presence_complete) * 10
+
+# Generate random background points using terra
+background_points <- spatSample(env_vars, size = n_background, 
+                                method = "random", na.rm = TRUE, 
+                                xy = TRUE, as.points = FALSE)
+
+# This returns a data frame with coordinates and environmental values
+# If you only want coordinates:
+background_coords <- background_points[, c("x", "y")]
+
+# Sample background points from study area
+background_env <- extract(env_vars, background_coords)
+
+# Check how many NA cells you have
+sum(is.na(values(env_vars[[1]])))
+
+# Create data frame for modeling
+# Add presence/background label
+presence_df <- data.frame(
+  lon = presence_complete$lon,
+  lat = presence_complete$lat,
+  presence = 1,
+  presence_env
+)
+
+background_df <- data.frame(
+  lon = background_points[, 1],
+  lat = background_points[, 2],
+  presence = 0,
+  background_env
+)
+
+# Combine presence and background data
+model_data <- rbind(presence_df, background_df)
+
+# Split data for training and testing (80/20 split)
+train_indices <- sample(1:nrow(model_data), size = 0.8 * nrow(model_data))
+train_data <- model_data[train_indices, ]
+test_data <- model_data[-train_indices, ]
+
+nrow(train_data)
+nrow(test_data)
+
+```
+
+### GLM Model
+```{r}
+# Using all environmental predictors plus interactions
+glm_model <- glm(presence ~ AnnualTemp + MaxTempWarmest + 
+                   AnnualPrecip + PrecipSeasonality +
+                   AnnualTemp:AnnualPrecip,  # Interaction term
+                 data = train_data,
+                 family = binomial(link = "logit"))
+
+
+print(summary(glm_model))
+
+
+# Predict across study area
+glm_pred <- predict(env_vars, glm_model, type = "response")
+
+# Visualize predictions
+plot(glm_pred, main = "GLM: Predicted Probability of Presence",
+     xlab = "Longitude", ylab = "Latitude")
+points(presence_coords, pch = 20, cex = 0.3, col = "red")
+map("world", add = TRUE)
+
+```
+
+### RF Model
+```{r}
+# Random Forest is a machine learning ensemble method
+
+# Prepare data - Random Forest needs factor for classification
+train_data$presence_factor <- as.factor(train_data$presence)
+
+# Build Random Forest model
+# ntree = number of trees, mtry = variables per split
+rf_model <- randomForest(
+  presence_factor ~ AnnualTemp + MaxTempWarmest + 
+    AnnualPrecip + PrecipSeasonality,
+  data = train_data,
+  ntree = 500,
+  importance = TRUE
+)
+
+
+print(rf_model)
+
+# Variable importance
+print(importance(rf_model))
+
+# Plot variable importance -- mean decrease accuracy is the one that people use most
+varImpPlot(rf_model, main = "Random Forest: Variable Importance")
+
+# Predict across study area
+# Need to predict probability for class "1" (presence)
+rf_pred <- predict(env_vars, rf_model, type = "prob", index = 2)
+
+# Visualize predictions
+plot(rf_pred, main = "Random Forest: Predicted Probability",
+     xlab = "Longitude", ylab = "Latitude")
+points(presence_coords, pch = 20, cex = 0.5, col = "red")
+map("world", add = TRUE)
+
+
+```
+
+### MaxEnt
+```{r}
+
+# MaxEnt is the most popular presence-only method
+# Requires maxent.jar file - we'll try to run it
+
+# Check if MaxEnt is available
+maxent_path <- system.file("java", package="dismo")
+maxent_path
+
+install.packages("rJava")
+library(rJava)
+
+if (file.exists(paste0(maxent_path, "/maxent.jar"))) {
+  
+  # Convert presence coordinates to a matrix or data frame with just lon/lat
+   presence_matrix <- as.data.frame(presence_coords[, c("lon", "lat")])
+   
+   # Convert SpatRaster to RasterStack (dismo requires raster package objects)
+   library(raster)
+   env_vars_raster <- stack(env_vars)
+ 
+  # Build MaxEnt model
+  maxent_model <- maxent(env_vars_raster, presence_matrix)
+  
+  print(maxent_model)
+  
+  # Predict across study area
+  maxent_pred <- predict(maxent_model, env_vars_raster)
+  
+  # Visualize predictions
+  plot(maxent_pred, main = "MaxEnt: Habitat Suitability",
+       xlab = "Longitude", ylab = "Latitude")
+  points(presence_matrix, pch = 20, cex = 0.3, col = "red")
+  map("world", add = TRUE)
+  
+  # Plot response curves
+  response(maxent_model)
+  
+} else {
+  cat("MaxEnt not available (requires maxent.jar)\n")
+  cat("To use MaxEnt:\n")
+  cat("1. Download maxent.jar from: https://biodiversityinformatics.amnh.org/open_source/maxent/\n")
+  cat("2. Place it in:", maxent_path, "\n")
+  cat("3. Restart R\n\n")
+  cat("Skipping MaxEnt for this exercise...\n")
+  maxent_pred <- NULL
+}
+
+```
+
+### Ensemble Modeling Tenatively
+```{r}
+## EXERCISE 11: Ensemble Modeling
+
+# Combine multiple models using weighted average based on AUC
+
+#. THROWS ERROR, WILL NEED ADJUSTMENT TO FIX
+
+# Stack predictions
+if (!is.null(maxent_pred)) {
+  pred_stack <- stack(bioclim_pred, glm_pred, rf_pred, maxent_pred)
+  weights <- auc_results$AUC / sum(auc_results$AUC)
+} else {
+  pred_stack <- stack(bioclim_pred, glm_pred, rf_pred)
+  weights <- auc_results$AUC[1:3] / sum(auc_results$AUC[1:3])
+}
+
+# Calculate weighted mean
+ensemble_pred <- weighted.mean(pred_stack, w = weights)
+
+# Visualize ensemble prediction
+plot(ensemble_pred, main = "Ensemble Model: Weighted Average",
+     xlab = "Longitude", ylab = "Latitude")
+points(presence_coords, pch = 20, cex = 0.3, col = "black")
+map("world", add = TRUE)
+
+# Calculate ensemble AUC
+ensemble_test_pred <- extract(ensemble_pred, test_coords)
+ensemble_auc <- calculate_auc(test_presence, ensemble_test_pred)
+round(ensemble_auc, 3)
+
+
+```
+
+### Model Evaluation via AUC
+```{r}
+## EXERCISE 9: Model Evaluation
+
+# Extract test data coordinates and environmental values
+test_coords <- test_data[, c("lon", "lat")]
+test_presence <- test_data$presence
+
+# Get predictions for test data from each model
+
+# GLM predictions
+glm_test_pred <- extract(glm_pred, test_coords)
+
+# Random Forest predictions
+rf_test_pred <- extract(rf_pred, test_coords)
+
+# MaxEnt predictions (if available)
+if (!is.null(maxent_pred)) {
+  maxent_test_pred <- extract(maxent_pred, test_coords)
+} else {
+  maxent_test_pred <- NULL
+}
+
+################################################################################
+# Calculate AUC (Area Under ROC Curve)
+################################################################################
+
+# Function to calculate AUC
+calculate_auc <- function(obs, pred) {
+  # Remove NAs
+  valid <- !is.na(pred)
+  obs <- obs[valid]
+  pred <- pred[valid]
+  
+  # Use dismo's evaluate function
+  eval <- evaluate(p = pred[obs == 1], a = pred[obs == 0])
+  return(eval@auc)
+}
+
+# Calculate AUC for each model
+auc_results <- data.frame(
+  Model = character(),
+  AUC = numeric(),
+  stringsAsFactors = FALSE
+)
+
+
+# GLM AUC
+glm_auc <- calculate_auc(test_presence, glm_test_pred)
+auc_results <- rbind(auc_results, 
+                     data.frame(Model = "GLM", AUC = glm_auc))
+
+# Random Forest AUC
+rf_auc <- calculate_auc(test_presence, rf_test_pred)
+auc_results <- rbind(auc_results, 
+                     data.frame(Model = "Random Forest", AUC = rf_auc))
+
+# MaxEnt AUC (if available)
+if (!is.null(maxent_test_pred)) {
+  maxent_auc <- calculate_auc(test_presence, maxent_test_pred)
+  auc_results <- rbind(auc_results, 
+                       data.frame(Model = "MaxEnt", AUC = maxent_auc))
+}
+
+# Display results
+# AUC Scores (Area Under ROC Curve)
+# (0.5 = random, 0.7 = acceptable, 0.8 = good, 0.9 = excellent)
+print(auc_results)
+
+
+# Visualize AUC comparison
+barplot(auc_results$AUC, 
+        names.arg = auc_results$Model,
+        ylim = c(0, 1),
+        main = "Model Performance Comparison (AUC)",
+        ylab = "AUC Score",
+        col = "steelblue",
+        las = 2)
+abline(h = 0.7, col = "orange", lty = 2, lwd = 2)
+abline(h = 0.8, col = "darkgreen", lty = 2, lwd = 2)
+legend("bottomright", 
+       legend = c("Acceptable (0.7)", "Good (0.8)"),
+       col = c("orange", "darkgreen"),
+       lty = 2, lwd = 2)
+
+```
