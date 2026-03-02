@@ -1,0 +1,55 @@
+---
+title: "Filtering_Data"
+output: html_document
+date: "2026-02-25"
+---
+
+Loading packages
+```{r}
+library(tidyverse) #cleaning data easily
+library(here) #reference file locations
+library(dplyr) # cleaning data easily
+library(boxr) #accessing box files, aka data without downloading
+set.seed(123)
+```
+
+Filtering the mosq data further
+```{r}
+#loading the data
+mosq_data <- read.csv(here("Data/mosquito_data.csv"))
+
+#removing NA
+mosq_data_na <- na.omit(mosq_data) #168584 observations
+summary(mosq_data_na) #confirming no na
+
+#want to keep c. quinquefasciatus, c. tarsalis, aedes aegypti
+mosq_species<- filter(mosq_data_na, mosq_data_na$Species == c("Culex quinquefasciatus", "Culex tarsalis", "Aedes aegypti")) #55831 observations
+mosq_species %>% count(Species) #confirming species
+
+
+#trimming data to lat(33.7987, 33.2043), lon( -112.573997704,   -111.5837)
+mosq_keep <- filter(mosq_species, mosq_species$Latitude >= 33.2043 &  33.7987 >= mosq_species$Latitude, mosq_species$Longitude >= -112.573997704 &  -111.5837 >=mosq_species$Longitude ) #54330
+
+#confirming points on graph
+lat_lon<- mosq_keep[c("Latitude", "Longitude")]
+plot(lat_lon) #testing on graph
+
+summary(mosq_keep) #looking at filter data frame!
+
+write.csv(mosq_keep, here("Natalie/data_cleaned/mosq_keep.csv"))
+write.csv(lat_lon, here("Natalie/data_cleaned/lat_lon.csv"))
+
+```
+
+Dealing with Climate Data - May need help with this??? 
+**Using Desiree Cliamte data right? what it called....**
+**NDVI, Occuarnce, Desiree Climate Data?**
+**need help figuring out how to access data **
+```{r}
+box_auth()
+```
+
+
+
+
+

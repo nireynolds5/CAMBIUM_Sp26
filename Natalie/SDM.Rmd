@@ -1,0 +1,265 @@
+---
+title: "SDM_Calculation"
+output: html_document
+date: "2026-03-01"
+---
+
+Loading Packages
+
+```{r}
+library(tidyverse) #data management
+library(dplyr) # data managemt
+library(here) # to use here directory to open data files easier
+library(raster)
+library(terra)
+library(randomForest)
+library(rJava)
+library(PresenceAbsence)
+
+```
+
+Loading in Data
+```{r}
+
+mosq_keep <- read.csv(here("Natalie/data_cleaned/mosq_keep.csv"))
+lat_lon<- read.csv(here("Natalie/data_cleaned/lat_lon.csv"))
+
+lon_lat <- lat_lon[c("Longitude", "Latitude")]
+
+#***need climate data??**
+
+```
+
+Creating Data Frame for Model **from previous SDM calc**
+```{r}
+coords_spatial <- SpatialPoints(lon_lat, proj4string =  CRS("+proj=longlat +datum=WGS84"))
+#+proj=longlat (saying I am using lat and lon not cords), +datum=WGS84 says use this geodetic coord (used in worldclim) 
+
+plot(coords_spatial) #checking points
+
+#Converting SpatialPoints to terra SpatVector (to use terra pack)
+coords_vect <- terra::vect(coords_spatial)
+
+plot(coords_vect) #checking points
+
+#Environmental data at the presences location
+prescence_env <- terra::extract(env_vars, coords_vect, na.rm = TRUE)
+
+plot(prescence_env) #checking points 
+nrow(prescence_env) #number of observations
+
+print(summary(prescence_env))
+
+
+
+#STARTING TO BIND THE PRESENT AND ABSENT
+presence_df <- data.frame(lon = occ_data_clean$decimalLongitude, lat = occ_data_clean$decimalLatitude, presence = 1, prescence_env)
+print(summary(presence_df))
+
+presence_df <- na.omit(presence_df)
+print(summary(presence_df))
+
+
+n_background <- nrow(presence_df) * 10
+
+
+#generate background points through terra package
+background_points <- spatSample(env_vars, size = n_background, method = "random", na.rm = TRUE, xy = TRUE, as.points = FALSE)
+
+background_coords <- background_points[, c("x", "y")] #switching to just coords, needs x,y to do extract
+
+#sample background environment
+background_env <- extract(env_vars, background_coords)
+
+print(summary(background_env))
+background_df <- data.frame(lon = background_points[,1], lat = background_points[,2], presence = 0, background_env)
+
+model_data <- rbind(presence_df, background_df) #combining present and absent data frames
+
+#checking data frame created
+print(summary(model_data))
+
+#splitting into training data
+train_indices <- sample(1:nrow(model_data), size = 0.8 *nrow(model_data)) #taking a random sample of model data
+train_data <- model_data[train_indices,]
+test_data <- model_data[-train_indices,]
+nrow(train_data) 
+nrow(test_data) 
+
+write.csv(train_data, file = here("data/02_clean/test_train/train_data_sp45.csv"))
+write.csv(test_data, file = here("data/02_clean/test_train/test_data_sp45.csv"))
+```
+
+
+
+
+
+GLM Model **Code from past thing**
+```{r}
+#creating glm model
+glm_model <- glm(presence ~ Mean_Diurnal_range + Isothermality + Mean_Temp_of_Wettest_Quarter + Mean_temp_of_Driest_quarter + Precipitation_of_wettest_Month + Precipitation_of_driest_month + Precipitation_Seasonality + Precipitation_of_Warmest_Quarter + Precipitation_of_coldest_Quart, data = train_data, family = binomial(link = "logit"))
+
+print(summary(glm_model))
+
+#predicting distrubtion based on calculated model
+glm_predict <- predict(env_vars, glm_model, type = "response")
+
+plot(glm_predict, main = "GLM: Predicted Probability of Presence",
+     xlab = "Longitude", ylab = "Latitude") 
+
+save(glm_predict, file =here("Data_Analysis/GLM/glm_predict_sp45.Rdata"))
+
+```
+
+
+
+
+Random Forest Model **Code from previous SDM calc**
+```{r}
+#data prep
+
+train_data$presence_factor <- as.factor(train_data$presence) #changes the data into factors 
+
+rf_model <- randomForest(presence_factor ~ Mean_Temp_of_Wettest_Quarter + Isothermality + Mean_Temp_of_Wettest_Quarter + Mean_temp_of_Driest_quarter + Precipitation_of_wettest_Month + Precipitation_of_driest_month + Precipitation_Seasonality + Precipitation_of_Warmest_Quarter + Precipitation_of_coldest_Quart, data = train_data, ntree = 1000, importance = TRUE, na.action = na.omit) #thinks that there are na present, but there is none? confused. adding na.action = na.omit fixes the problem though
+
+print(rf_model)
+
+#variable importance
+print(importance(rf_model)) #need to figure out what this means exactly number wise
+varImpPlot(rf_model, main = "Random Forest: Bio Variable Importance")
+
+#predict across study area
+rf_pred <- predict(env_vars, rf_model, type = "prob", index = 2) #WHAT DOES TYPE AND INDEX MEAN?
+#rf_test <- predict(rf_model_test, type = "prob", index =2 ) # how it is done in book, 
+
+plot(rf_pred, main = "RF Model Probability: Amsinkia intermedia", xlab = "lon", ylab = "lat") 
+points(lon_lat, pch =10, col = "red", cex =0.5)
+
+
+save(rf_pred, file =here("Data_Analysis/Random_Forest/rf_pred_sp45.Rdata"))
+
+```
+
+
+
+Maxent Model **Code from previous work**
+```{r}
+maxent_path <- system.file("java", package="dismo")
+maxent_path
+
+#if file is telling maxent where the files are located
+
+lon_lat_maxent <- presence_df[c("lon", "lat")]
+
+if (file.exists(paste0(maxent_path, "/maxent.jar"))) {
+  
+prescence_matrix <- as.data.frame(lon_lat_maxent)
+
+#convert spat raster to raster stack
+env_vars_raster <- stack(env_vars)
+
+#building maxent model
+maxent_model <- maxent(env_vars_raster, prescence_matrix)
+print(maxent_model)
+
+#Predict the distrubution
+
+maxent_pred <- predict(maxent_model, env_vars_raster)
+
+#Visuzalize prediction
+plot(maxent_pred, main = "Maxent: Habitat Suitability - Amsinckia intermedia", xlab = "lon", ylab = "lat",)
+ 
+#response curves
+response(maxent_model
+         )
+
+} else {
+  cat("MaxEnt not available (requires maxent.jar)\n")
+  cat("To use MaxEnt:\n")
+  cat("1. Download maxent.jar from: https://biodiversityinformatics.amnh.org/open_source/maxent/\n")
+  cat("2. Place it in:", maxent_path, "\n")
+  cat("3. Restart R\n\n")
+  cat("Skipping MaxEnt for this exercise...\n")
+  maxent_pred <- NULL}
+
+
+save(maxent_pred, file =here("Data_Analysis/Maxent/maxent_pred_sp45.Rdata"))
+
+```
+
+
+
+Calculating AUC - Guisan Book Example
+```{r}
+#Creating Data frame of observed and predicted values
+
+#extracting test data and coords to test models.
+test_coords <- test_data[, c("lon", "lat")]
+test_presence <- test_data$presence
+
+#glm
+glm_test_pred <-extract(glm_predict, test_coords, pos_label = 1)
+
+
+#random forest#random forglm_predictest
+rf_test_pred <- extract(rf_pred, test_coords, pos_label = 1) 
+
+#Maxent 
+ if (!is.null(maxent_pred)) {
+  maxent_test_pred <- extract(maxent_pred, test_coords)
+} else {
+  maxent_test_pred <- NULL
+}
+
+#Calculating AUC
+
+glm_auc_df <- data.frame(rf_test_pred[,1], test_presence, glm_test_pred[,2])
+auc_glm <- auc(glm_auc_df, which.model =1, na.rm = TRUE)
+  
+rf_auc_df <- data.frame(rf_test_pred[,1], test_presence, rf_test_pred[,2])
+auc_rf <- auc(rf_auc_df, which.model =1, na.rm = TRUE)
+
+maxent_auc_df <- data.frame(rf_test_pred[,1], test_presence, maxent_test_pred)
+auc_maxent <- auc(maxent_auc_df, which.model =1, na.rm = TRUE)
+
+
+auc_results <- rbind(auc_glm, auc_rf, auc_maxent)
+colnames(auc_results) <- c("AUC", "StdDev")
+rownames(auc_results) <-c("GLM", "Rf", "Maxent")
+```
+
+
+Ensemble Model **code from previous work**
+```{r}
+#turning maxent to different spat for enseble purpose
+maxent_pred_spat <- rast(maxent_pred)
+
+
+#ensemble stacking, mean
+pred_stack <- stack( x = c(glm_predict, rf_pred, maxent_pred_spat))
+
+#ensemeble stacking, weighted means
+weights <- auc_results$AUC / sum(auc_results$AUC)
+
+ensemble_pred <- weighted.mean(pred_stack, w = weights)
+plot(ensemble_pred)
+
+
+#using test data now to get AUC
+ensemble_test_pred <- extract(ensemble_pred, test_coords, pos_label = 1)
+
+
+ensemble_auc_df <- data.frame(rf_test_pred[,1], test_presence, ensemble_test_pred)
+
+auc_ensemble<- auc(ensemble_auc_df, which.model = 1, na.rm = TRUE)
+
+auc_results <- rbind(auc_glm, auc_rf, auc_maxent, auc_ensemble)
+colnames(auc_results) <- c("AUC", "StdDev")
+rownames(auc_results) <-c("GLM", "Rf", "Maxent", "Ensemble")
+
+write.csv(auc_results, file = here("data/02_clean/auc/auc_results.sp45"))
+```
+
+
+
+
