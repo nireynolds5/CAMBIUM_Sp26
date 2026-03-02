@@ -1,0 +1,50 @@
+---
+title: "Filtering Data"
+author: "Justin Lamb"
+date: "2026-03-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load Packages
+
+```{r}
+library(tidyverse)
+library(here)
+library (dplyr)
+library(boxr)
+set.seed(123)
+library(raster)
+library(sp)
+library(dismo)
+library(lubridate)
+
+```
+
+Filter Data
+```{r}
+## remove NA
+
+mosquito_na<-na.omit(mosquito_data)
+
+## filter species of interest
+
+mosquito_int <- mosquito_na |>
+  filter(Species == "Aedes aegypti" | 
+           Species == "Culex tarsalis"|
+           Species == "Culex quinquefasciatus")
+```
+
+Add 'Week' Column
+```{r}
+mosquito_int <- mosquito_int %>%
+  mutate(
+    Date = as.Date(Date),
+    Week = isoweek(Date)
+  ) %>%
+  relocate(Week, .after = 1)
+```
+
