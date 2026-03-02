@@ -6,9 +6,138 @@ output: html_document
 ```{r}
 library(tidyverse)
 library(leaflet)
+library(lubridate)
 ```
 
 ```{r}
 mosquito_data <- read.csv("mosquito_data.csv", row.names = 1)
+```
+
+```{r}
+# About the project:
+#   Output of Arizona Map, focusing on Metro PHX and Maricopa
+# Add layers of NDVI, Precip
+# coordinates --> gis spatial 
+# create variable "group by" cooridnate set "group_by" (2013-2023) ()
+# I want to see the abundance of mosquitos in (, ) species 
+# Females vs Males
+# Filter out rows with NAs/Nones for Date or species of location 
+# # Mosquito pool testing
+# Trapped mosquitoes are separated by species and sex - female *Culex* and *Aedes aegypti* mosquitoes are ground up and tested for arboviruses.
+# 
+# ## Arizona Mosquito Dataset
+# 
+# Arizona conducts extensive surveillance of mosquitoes year round, with majority of surveillance occurring April-October. Target species include *Aedes aegypti* and *Culex* species.
+```
+
+```{r}
+#change date to year and week (1-52), use lubridate for dates, mutate to create an additional column
+mosq_clean <- mosquito_data %>%
+  mutate(
+    Date = ymd(Date),
+    year = year(Date),
+    week = isoweek(Date)
+  )
+```
+
+```{r}
+#view current species in dataset
+mosquito_data %>%
+  count(Species) 
+
+#questions: 1) should aedes remain anonymous (count=1); 2) for 'Culex' should it be left as standalone (count=58)? 
+```
+
+#NA / None / cleaning
+#keep in mind: Females = transmission relevance & Males = species presence / population signal
+```{r}
+mosq_clean <- mosq_clean %>%
+  filter(
+    # Remove inconsistent None rows
+    !(Species == "None" & (Males > 0 | Females > 0)),
+    
+    # Remove NA species if mosquitoes were caught
+    !(is.na(Species) & (Males > 0 | Females > 0))
+  )
+```
+
+#No mosquitos caught vs. mosquitos caught (Presence/absence models)
+
+#Decision point: some of the species list have multiple species string, I am choosing to create a new column  and name it 'Culex Hybrid'.
+#Culex quinquefasciatus, Culex tarsalis, Aedes aegypti, Culex hybrid (any multi-species Culex string containing /)
+
+##Decision point: We will keep 'zero traps' because it shows the trap was deployed and the species was NOT detected.If we remove zero traps, our model only learns from “where species occurred,” which biases suitability upward.
+```{r}
+mosq_clean <- mosq_clean %>%
+  mutate(
+    total_mosq = Males + Females,
+    trap_zero = if_else(total_mosq == 0, TRUE, FALSE)
+  ) %>%
+  mutate(
+    species_clean = case_when( #abundance + species classification is chained
+      str_detect(Species, "Culex") & str_detect(Species, "/") ~ "Culex hybrid",
+      Species == "Culex quinquefasciatus" ~ "Culex quinquefasciatus",
+      Species == "Culex tarsalis" ~ "Culex tarsalis",
+      Species == "Aedes aegypti" ~ "Aedes aegypti",
+      TRUE ~ NA_character_
+    )
+  )
+```
+
+
+```{r}
+#view work and filter the 4 groups
+mosq_clean <- mosq_clean %>%
+  filter(!is.na(species_clean))
+```
+
+
+```{r}
+mosq_clean %>% count(species_clean)
+```
+
+Now lets create a weekly summary to sum across the info
+```{r}
+weekly_summary <- mosq_clean %>%
+  filter(!is.na(species_clean)) %>%
+  group_by(year, week, species_clean) %>%
+  summarise(
+    total_traps = n(), #Number of trap × species records that week.
+    traps_detected = sum(total_mosq > 0),#How many traps detected this species that week
+    total_males = sum(Males, na.rm = TRUE),
+    total_females = sum(Females, na.rm = TRUE),
+    total_mosq = sum(total_mosq, na.rm = TRUE), #Total abundance of that species that week.
+    
+    total_tests = sum(!is.na(Result)), #Number of pools tested.
+    positives = sum(Result == 1, na.rm = TRUE), #Number of positive pools.
+    positivity_rate = if_else(total_tests > 0, #Positive pools / tested pools.
+                               positives / total_tests,
+                               NA_real_),
+    
+    .groups = "drop"
+  )
+#NOTE: This summary is species-specific weekly aggregation.
+#It does NOT yet include zero traps where species absent.
+
+```
+
+```{r}
+glimpse(weekly_summary)
+```
+
+```{r}
+arrange(weekly_summary, year, week, species_clean)
+```
+
+
+Next steps:
+```{r}
+# Species-specific abundance modeling
+# 
+# Species-specific positivity rates
+# 
+# Spatial risk mapping by species
+# 
+# Presence/absence modeling
 ```
 
