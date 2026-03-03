@@ -29,3 +29,10 @@ Culex quinquefasciatus (=Cx quinquefasciatus)
 - - Culex quinx, affectionately, aka southern house mosquito.
 Part of the Cx pipiens complex.
 **The main West Nile vector in Arizona due to its prevalence.
+
+suggested code:
+
+maricopa_obs %>% 
+  mutate(
+    Presence = ifelse(Males == 0 & Females == 0, 0, 1)
+  )
