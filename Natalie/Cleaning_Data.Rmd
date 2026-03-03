@@ -16,19 +16,29 @@ set.seed(123)
 Filtering the mosq data further
 ```{r}
 #loading the data
-mosq_data <- read.csv(here("Data/mosquito_data.csv"))
-
-#removing NA
-mosq_data_na <- na.omit(mosq_data) #168584 observations
-summary(mosq_data_na) #confirming no na
+mosq_data <- read.csv(here("Data/mosquito_data.csv")) #619644
 
 #want to keep c. quinquefasciatus, c. tarsalis, aedes aegypti
-mosq_species<- filter(mosq_data_na, mosq_data_na$Species == c("Culex quinquefasciatus", "Culex tarsalis", "Aedes aegypti")) #55831 observations
+mosq_species<- filter(mosq_data, mosq_data$Species == "Culex quinquefasciatus" | mosq_data$Species == "Culex tarsalis" | mosq_data$Species == "Aedes aegypti") # observations 619644
+
 mosq_species %>% count(Species) #confirming species
 
 
 #trimming data to lat(33.7987, 33.2043), lon( -112.573997704,   -111.5837)
-mosq_keep <- filter(mosq_species, mosq_species$Latitude >= 33.2043 &  33.7987 >= mosq_species$Latitude, mosq_species$Longitude >= -112.573997704 &  -111.5837 >=mosq_species$Longitude ) #54330
+mosq_geo<- filter(mosq_species, mosq_species$Latitude >= 33.2043 &  33.7987 >= mosq_species$Latitude, mosq_species$Longitude >= -112.573997704 &  -111.5837 >=mosq_species$Longitude ) #86482 species
+
+
+
+
+
+mosq_geo$Date <- as.Date(mosq_geo$Date)
+mosq_geo$Week <- format(mosq_geo$Date, "%Y-%U")
+
+
+#need add week
+
+mosq_keep <- as.Date(mosq_keep$Date)
+mosq_keep$Week <- format(mosq_keep$Date, "%U")
 
 #confirming points on graph
 lat_lon<- mosq_keep[c("Latitude", "Longitude")]
