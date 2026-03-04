@@ -1,0 +1,45 @@
+mosquito_final <- read.csv("C:/Users/desireeanderson/Downloads/mosquito_final.csv")
+ref<-read.csv("D:\\VECTOR\\VECTOR\\VECTOR\\YW_lookup.csv")
+
+#list the files in the weather database (Zika server)
+file_list <- list.files("D:\\VECTOR\\VECTOR\\VECTOR\\dbase/weather")
+
+#convert the dataset coordinates to its own dataframe for raster extraction
+dat_pts<-data.frame("longitude"=mosquito_final$Longitude,"latitude"=mosquito_final$Latitude)
+
+#extract all raster layers in database to points
+for (layer in file_list) {
+  r<-raster(paste0("D:\\VECTOR\\VECTOR\\VECTOR\\dbase/weather/",layer))
+  names(r)<-substr(layer,1,10)
+  column_name <- names(r)
+  mosquito_final[[column_name]] <- raster::extract(r, dat_pts)
+}
+
+#match the YW of each row to the corresponding YW row in the reference dataset
+match_idx <- match(mosquito_final$YW, ref$YW)
+
+#for loop to time lag 1&2 weeks
+for (k in 1:2) {
+  k2 <- k + 2
+  source_nums <- ref[[k2]][match_idx]  # source week number for each dat row
+  
+  for (var in c("tavg", "tmin", "tmax", "prec", "humd")) {
+    target_col <- paste0(var, k)
+    # Pull value from the appropriate source column for each row
+    mosquito_final[[target_col]] <- mapply(
+      function(row, src) mosquito_final[[paste0(var, src)]][row],
+      seq_len(nrow(mosquito_final)), source_nums
+    )
+  }
+}
+
+#remove extracted weather columns (leaving only lagged variables) - always check columns before removing
+mosquito_final[12:3511]<-NULL
+
+#set humidity and precip vals less than 0 to 0, humidity >100 to 100
+humd_cols <- grep("^humd", names(mosquito_final), value = TRUE)
+prec_cols <- grep("^prec", names(mosquito_final), value = TRUE)
+mosquito_final[humd_cols] <- lapply(mosquito_final[humd_cols], function(x) pmin(pmax(x, 0), 100))
+mosquito_final[prec_cols] <- lapply(mosquito_final[prec_cols], function(x) pmax(x, 0))
+
+
