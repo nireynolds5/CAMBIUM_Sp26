@@ -14,66 +14,67 @@ library(raster)
 library(terra)
 library(randomForest)
 library(rJava)
-library(PresenceAbsence)
+library(ggplot2)
+library(biomod2)
+library(gstat)
 
 ```
+
 
 Loading in Data
 ```{r}
 
-obs_NDVI<- read.csv(here("Natalie/data_cleaned/obs_NDVI.csv"))
+cq <- read.csv(here("Natalie/data_cleaned/cq_df.csv"))
+ct <- read.csv(here("Natalie/data_cleaned/ct_df.csv"))
+aa<- read.csv(here("Natalie/data_cleaned/aa_df.csv"))
 
 ```
 
-Creating Data Frame for Model **from previous SDM calc**
+Making Spatial Rasters for environment data
 ```{r}
 
-#STARTING TO BIND THE PRESENT AND ABSENT
-presence_df <- data.frame(lon = obs_NDVI$Longitude, lon = obs_NDVI$Latitude, 
-                          
-                          presence = 1, prescence_env) #need to think more about making present female and male
+cq_vec <- terra :: vect(cq, geom = c("Latitude", "Longitude"), crs = "EPSG:4326") #making a spat_raster
+plot(cq_vec)
 
-print(summary(presence_df))
-
-presence_df <- na.omit(presence_df)
-print(summary(presence_df))
+template <- terra :: rast( xmin =33.2043, xmax= 33.7987, ymin= -112.573997704, ymax = -111.5837, res = 0.01, crs = "EPSG:4326")
 
 
-n_background <- nrow(presence_df) * 10
+
+```
 
 
-#generate background points through terra package
-background_points <- spatSample(env_vars, size = n_background, method = "random", na.rm = TRUE, xy = TRUE, as.points = FALSE)
-
-background_coords <- background_points[, c("x", "y")] #switching to just coords, needs x,y to do extract
-
-#sample background environment
-background_env <- extract(env_vars, background_coords)
-
-print(summary(background_env))
-background_df <- data.frame(lon = background_points[,1], lat = background_points[,2], presence = 0, background_env)
-
-model_data <- rbind(presence_df, background_df) #combining present and absent data frames
-
-#checking data frame created
-print(summary(model_data))
-
+Test and train Data frames
+```{r}
 #splitting into training data
-train_indices <- sample(1:nrow(model_data), size = 0.8 *nrow(model_data)) #taking a random sample of model data
-train_data <- model_data[train_indices,]
-test_data <- model_data[-train_indices,]
+train_indices <- sample(1:nrow(cq), size = 0.8 *nrow(cq)) #taking a random sample from cq
+train_data <- cq[train_indices,]
+test_data <- cq[-train_indices,]
 nrow(train_data) 
 nrow(test_data) 
 
-write.csv(train_data, file = here("data/02_clean/test_train/train_data_sp45.csv"))
-write.csv(test_data, file = here("data/02_clean/test_train/test_data_sp45.csv"))
+write.csv(train_data, file = here("Natalie/data_cleaned/test_train/train_data_cq.csv"))
+write.csv(test_data, file = here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
+```
+
+
+
+
+SDM - GLM **NEED UPDATE this**
+```{r}
+glm_model <- glm(cq ~ NDVI+ MNDWI+
+                                 tavg2+ tmin2+ tmax2+
+                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
+
+glm_predict <- terra::predict(template, glm_model, type = "response") #need to make a raster of the data
+
+plot(glm_predict)
+
 ```
 
 
 
 
 
-GLM Model **Code from past thing**
 ```{r}
 #creating glm model
 glm_model <- glm(presence ~ Mean_Diurnal_range + Isothermality + Mean_Temp_of_Wettest_Quarter + Mean_temp_of_Driest_quarter + Precipitation_of_wettest_Month + Precipitation_of_driest_month + Precipitation_Seasonality + Precipitation_of_Warmest_Quarter + Precipitation_of_coldest_Quart, data = train_data, family = binomial(link = "logit"))
@@ -87,6 +88,7 @@ plot(glm_predict, main = "GLM: Predicted Probability of Presence",
      xlab = "Longitude", ylab = "Latitude") 
 
 save(glm_predict, file =here("Data_Analysis/GLM/glm_predict_sp45.Rdata"))
+
 
 ```
 
