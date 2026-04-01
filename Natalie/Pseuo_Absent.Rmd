@@ -1,0 +1,92 @@
+---
+title: "Desiree_Cide"
+output: html_document
+date: "2026-03-24"
+---
+load library
+```{r}
+library(tidyverse)
+```
+
+create columns
+```{r}
+mosquito$cq <- NA
+mosquito$ct <- NA
+mosquit$aa <- NA
+mosquito$count <- mosquito$male + mosquito$female
+
+
+
+```
+
+
+Change count to interger
+```{r}
+mosquito$cq <- as.integer(mosquito$Species == "Culex quinquefasciatus" & mosquito$count>0)
+mosquito$ct <- as.integer(mosquito$Species == "Culex tarsalis" & mosquito$count>0)
+mosquito$aa <- as.integer(mosquito$Species == "Aedes aegypti" & mosquito$count>0)
+
+
+```
+
+
+
+Merge rows Makes new data frame, decreases the observations by a good chunk
+```{r}
+
+mosq_new <- mosquito %>% group_by(latitude, longitude, yw, CLIMATE) #need to add all the climate variables
+summarise(cq=max(cq), ct=max(ct), aa=max(aa))
+
+
+```
+
+Na omit 
+```{r}
+mosq_new <-na.omit(mosq_new) #desiree amount is ~38000
+```
+
+
+determine number of present / absent
+```{r}
+sum(mosq_new$cq) #gives number of observations where the species is present
+sum(mosq_new$ct)#gives number of observations where the species is present
+sum(mosq_new$aa)#gives number of observations where the species is present
+```
+
+Creating absent for species
+```{r}
+cq0 <- subset(mosq_new, cq==0)
+ct0 <- subset(mosq_new, ct==0)
+aa0 <- subset(mosq_new, aa==0)
+```
+
+create present for species
+```{r}
+cq1 <- subset(mosq_new, cq==1)
+ct1 <- subset(mosq_new, ct==1)
+aa1 <- subset(mosq_new, aa==1)
+```
+
+Sampling the data frame to get equal data frame amounts for present and absent
+**switch if more present, need the amount of to be equal**
+```{r}
+cq0_samp <- cq0[sample(nrow(cq0), nrow(cq1), replace = FALSE),]
+ct0_samp <- ct0[sample(nrow(ct0), nrow(ct1), replace = FALSE),]
+aa0_samp <- aa0[sample(nrow(aa0), nrow(aa1), replace = FALSE),]
+
+
+```
+
+
+Putting it all together, all the data frame together, create a balance happy model
+```{r}
+cq <- rbind(cq1, cq0_samp)
+ct <- rbind(ct1, ct0_samp)
+aa <- rbind(aa1, aa0_samp)
+
+```
+
+
+
+
+

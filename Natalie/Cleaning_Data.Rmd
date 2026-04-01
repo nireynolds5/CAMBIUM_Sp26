@@ -30,20 +30,17 @@ mosq_geo<- filter(mosq_species, mosq_species$Latitude >= 33.2043 &  33.7987 >= m
 
 
 
-
+#adding week
 mosq_geo$Date <- as.Date(mosq_geo$Date)
-mosq_geo$Week <- format(mosq_geo$Date, "%Y-%U")
+mosq_geo$Week <- format(mosq_geo$Date, "%V") 
+mosq_geo$Year <- format(mosq_geo$Date, "%Y") 
 
-
-#need add week
-
-mosq_keep <- as.Date(mosq_keep$Date)
-mosq_keep$Week <- format(mosq_keep$Date, "%U")
 
 #confirming points on graph
-lat_lon<- mosq_keep[c("Latitude", "Longitude")]
+lat_lon<- mosq_geo[c("Latitude", "Longitude")]
 plot(lat_lon) #testing on graph
 
+mosq_keep <- mosq_geo
 summary(mosq_keep) #looking at filter data frame!
 
 write.csv(mosq_keep, here("Natalie/data_cleaned/mosq_keep.csv"))

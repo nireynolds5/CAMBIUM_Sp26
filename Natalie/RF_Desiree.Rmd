@@ -1,0 +1,21 @@
+---
+title: "Random Forest"
+output: html_document
+date: "2026-03-24"
+---
+Libary load
+```{r}
+library(randomForest)
+```
+
+
+Create the rf model
+```{r}
+ct_rf <- randomForest(x = cq[, 4:13], y=as.factor(cq$cq), nodesize = 10, ntree = 100) #x can refer to the columns refering to, y is the present / absent
+#nodesize = 10 to not overfit the data, run faster
+#ntree for speed and limit area
+# strata makes a potentially biaseed data smaller
+
+```
+
+

@@ -21,39 +21,18 @@ library(PresenceAbsence)
 Loading in Data
 ```{r}
 
-mosq_keep <- read.csv(here("Natalie/data_cleaned/mosq_keep.csv"))
-lat_lon<- read.csv(here("Natalie/data_cleaned/lat_lon.csv"))
-
-lon_lat <- lat_lon[c("Longitude", "Latitude")]
-
-#***need climate data??**
+obs_NDVI<- read.csv(here("Natalie/data_cleaned/obs_NDVI.csv"))
 
 ```
 
 Creating Data Frame for Model **from previous SDM calc**
 ```{r}
-coords_spatial <- SpatialPoints(lon_lat, proj4string =  CRS("+proj=longlat +datum=WGS84"))
-#+proj=longlat (saying I am using lat and lon not cords), +datum=WGS84 says use this geodetic coord (used in worldclim) 
-
-plot(coords_spatial) #checking points
-
-#Converting SpatialPoints to terra SpatVector (to use terra pack)
-coords_vect <- terra::vect(coords_spatial)
-
-plot(coords_vect) #checking points
-
-#Environmental data at the presences location
-prescence_env <- terra::extract(env_vars, coords_vect, na.rm = TRUE)
-
-plot(prescence_env) #checking points 
-nrow(prescence_env) #number of observations
-
-print(summary(prescence_env))
-
-
 
 #STARTING TO BIND THE PRESENT AND ABSENT
-presence_df <- data.frame(lon = occ_data_clean$decimalLongitude, lat = occ_data_clean$decimalLatitude, presence = 1, prescence_env)
+presence_df <- data.frame(lon = obs_NDVI$Longitude, lon = obs_NDVI$Latitude, 
+                          
+                          presence = 1, prescence_env) #need to think more about making present female and male
+
 print(summary(presence_df))
 
 presence_df <- na.omit(presence_df)

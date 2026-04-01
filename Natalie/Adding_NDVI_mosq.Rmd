@@ -1,0 +1,125 @@
+---
+title: "Adding_NDVI"
+output: html_document
+date: "2026-03-23"
+---
+
+loading libraries
+```{r}
+library(tidyverse)
+library(dplyr)
+library(here) # to use here directory to open data files easier
+library(maps)
+library(raster)
+library(ENMTools) #Correlation of bioclim data - Pearson
+library(usdm) #VIF for correlation 
+library(terra)
+library(raster)
+library(here)
+set.seed(123)
+
+
+
+library(raster)
+library(terra)
+library(randomForest)
+library(rJava)
+library(PresenceAbsence)
+```
+
+
+Loading in Data
+```{r}
+mosq <-read.csv(here("Data/mosquito_final_weather.csv"))
+NDVI <- rast(here("Data/NDVI.tif"))
+
+```
+
+
+Cleaning Data, Nick's code
+
+```{r}
+
+#Use na.rm = TRUE to filter them out
+mosq %>% 
+  group_by(Species) %>% 
+  summarize(Males = sum(Males, na.rm = TRUE), Females = sum(Females, na.rm = TRUE))
+
+# FILTER OUT ALL MOSQS THAT AREN'T CULEX OR AEDES
+
+species_int <- mosq |>
+  filter(Species == "Aedes aegypti" | 
+           Species == "Culex tarsalis"|
+           Species == "Culex quinquefasciatus")
+
+# add a week column to 1-52 mosquito dataset
+species_int <- species_int %>%
+  mutate(
+    Date = as.Date(Date),
+    Week = isoweek(Date)
+  ) %>%
+  relocate(Week, .after = 1)
+
+# make a bounding box to filter the observations to bounded box for Maricopa county/metro phoenix
+# West: -112.573997704 North: 33.7987N East: -111.5837 South: 33.2043
+maricopa_obs <- species_int |>
+  filter(Latitude >= 33.2043 & Latitude <= 33.7987,
+         Longitude <= -111.5837 & Longitude  >=  -112.573997704
+)
+
+
+```
+
+
+
+Extracting NDVI
+```{r}
+lon_lat <- maricopa_obs[c("Longitude", "Latitude")]
+coords_spatial <- SpatialPoints(lon_lat, proj4string =  CRS("+proj=longlat +datum=WGS84"))
+plot(coords_spatial)
+
+coords_vect <- terra :: vect(coords_spatial)
+
+maricopa_obs$NDVI_value <- terra :: extract(NDVI, coords_vect, na.rm = TRUE)
+
+write.csv(maricopa_obs, here("Natalie/data_cleaned/obs_NDVI.csv"))
+
+```
+
+
+SDM - GLM **NEED UPDATE this**
+```{r}
+obs_NDVI <- read.csv(here("Natalie/data_cleaned/obs_NDVI.csv"))
+
+species_int <- obs_NDVI |>
+  filter(Species == "Aedes aegypti" | 
+           Species == "Culex tarsalis"|
+           Species == "Culex quinquefasciatus")
+
+obs_NDVI <- species_int %>% 
+mutate(
+  Presence = ifelse(Males ==0 & Females == 0, 0, 1) )
+
+write.csv(obs_NDVI, here("Natalie/data_cleaned/completed_obs.csv"))
+
+
+train_indices <- sample(1:nrow(obs_NDVI), size = 0.8 *nrow(obs_NDVI)) 
+train_data <- obs_NDVI[train_indices,]
+test_data <- obs_NDVI[-train_indices,]
+
+train_data$Presence
+
+glm_model <- glm(Presence ~ NDVI_value.NDVI+
+                                 tavg2+ tmin2+ tmax2+
+                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
+
+
+env_vars <- train_data[,c("tavg1", "tmin1","tmax1","prec1","humd1","tavg2", "tmin2","tmax2","prec2","humd2", "NDVI_value.NDVI")]
+
+env_vars_rast<-terra :: rast(env_vars)
+
+glm_predict <- predict(env_vars_rast, glm_model, type = "response") #need to make a raster of the data
+plot(glm_predict)
+
+```
+
