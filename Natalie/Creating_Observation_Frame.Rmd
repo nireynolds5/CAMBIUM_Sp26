@@ -1,0 +1,159 @@
+---
+title: "Adding_NDVI"
+output: html_document
+date: "2026-03-23"
+---
+
+loading libraries
+```{r}
+library(tidyverse)
+library(dplyr)
+library(here) # to use here directory to open data files easier
+library(maps)
+library(raster)
+library(ENMTools) #Correlation of bioclim data - Pearson
+library(usdm) #VIF for correlation 
+library(terra)
+library(raster)
+library(here)
+set.seed(123)
+
+
+
+library(raster)
+library(terra)
+library(randomForest)
+library(rJava)
+library(PresenceAbsence)
+```
+Reading in data from desiree
+```{r}
+mosq <- read.csv(here("Data/mosquito_final_weather.csv"))
+```
+
+
+Cleaning Data, Nick's code
+```{r}
+
+#Use na.rm = TRUE to filter them out
+mosq %>% 
+  group_by(Species) %>% 
+  summarize(Males = sum(Males, na.rm = TRUE), Females = sum(Females, na.rm = TRUE))
+
+# FILTER OUT ALL MOSQS THAT AREN'T CULEX OR AEDES
+
+species_int <- mosq |>
+  filter(Species == "Aedes aegypti" | 
+           Species == "Culex tarsalis"|
+           Species == "Culex quinquefasciatus")
+
+# add a week column to 1-52 mosquito dataset
+species_int <- species_int %>%
+  mutate(
+    Date = as.Date(Date),
+    Week = isoweek(Date)
+  ) %>%
+  relocate(Week, .after = 1)
+
+# make a bounding box to filter the observations to bounded box for Maricopa county/metro phoenix
+# West: -112.573997704 North: 33.7987N East: -111.5837 South: 33.2043
+maricopa_obs <- species_int |>
+  filter(Latitude >= 33.2043 & Latitude <= 33.7987,
+         Longitude <= -111.5837 & Longitude  >=  -112.573997704
+)
+
+
+```
+
+Extracting NDVI and MNDWI
+```{r}
+NDVI <- raster("NDVI.tif")
+MNDWI <- raster("MNDWI.tif")
+
+lonlat_df <- data.frame(
+  Longitude = mosquito_final$Longitude,
+  Latitude = mosquito_final$Latitude
+)
+
+mosquito_final$NDVI <- raster::extract(NDVI, lonlat_df)
+mosquito_final$MNDWI <- raster::extract(MNDWI, lonlat_df)
+
+plot(x = mosquito_final$Longitude, y = mosquito_final$Latitude, data = mosquito_final$NDVI)
+plot(x = mosquito_final$Longitude, y = mosquito_final$Latitude, data = mosquito_final$MNDWI)
+#these are crappy maps, but it shows some idea of where the sampling points are
+#note to self to make better ones later in leaflet
+# add a column for overall presence / absence
+mosquito_final <- mosquito_final %>% 
+mutate(
+  Presence = ifelse(Males ==0 & Females == 0, 0, 1)
+)
+#write.csv(mosquito_final, "mosquito_final.csv")
+```
+
+
+Generating Pseuo Absences
+```{r}
+# create columns with each of the three species
+
+mosquito_final<- read.csv(here("Natalie/data_cleaned/mosquito_final_NDVI_MNDWI.csv"))
+
+mosquito_final$cq <- NA
+mosquito_final$ct <- NA
+mosquito_final$aa <- NA
+mosquito_final$count <- mosquito_final$Males + mosquito_final$Females
+
+# create presence and absence for each species
+mosquito_final$cq <- as.integer(mosquito_final$Species == "Culex quinquefasciatus" & mosquito_final$count > 0)
+mosquito_final$ct <- as.integer(mosquito_final$Species == "Culex tarsalis" & mosquito_final$count > 0)
+mosquito_final$aa <- as.integer(mosquito_final$Species == "Aedes aegypti" & mosquito_final$count > 0)
+
+# merge rows (group_by) and summarize the three species
+mosq_new <- mosquito_final |>
+  group_by(
+    Latitude, Longitude, YW, tavg1, tavg2, tmin1, tmin2, tmax1, tmax2, prec1, prec2, humd1, humd2, NDVI, MNDWI
+  ) |>
+  summarize(
+    cq=max(cq), ct=max(ct), aa=max(aa)
+  )
+# omit NAs
+mosq_new <- na.omit(mosq_new)
+
+# determine presence and absence numbers
+
+sum(mosq_new$cq) #100918 observations
+sum(mosq_new$ct) #36995 observations
+sum(mosq_new$aa) # 79614 observations
+
+```
+
+
+```{r}
+# Creating absent frames
+
+cq0 <- subset(mosq_new, cq==0)
+ct0 <- subset(mosq_new, ct==0)
+aa0 <- subset(mosq_new, aa==0)
+
+
+# creating presnt frame
+cq1 <- subset(mosq_new, cq==1)
+ct1 <- subset(mosq_new, ct==1)
+aa1 <- subset(mosq_new, aa==1)
+
+### equalize the number of presences and absences 
+#**Switch for absent if need to make equal!**
+cq0_samp <- cq0[sample(nrow(cq0),nrow(cq1), replace = FALSE),]
+ct0_samp <- ct0[sample(nrow(ct0),nrow(ct1), replace = FALSE),]
+aa0_samp <- aa0[sample(nrow(aa0),nrow(aa1), replace = FALSE),]
+
+# now bind the absences and presences together
+
+cq <- rbind(cq1, cq0_samp)
+ct <- rbind(ct1, ct0_samp)
+aa <- rbind(aa1, aa0_samp)
+
+
+write.csv(cq, here("Natalie/data_cleaned/cq_df.csv"))
+write.csv(ct, here("Natalie/data_cleaned/ct_df.csv"))
+write.csv(aa, here("Natalie/data_cleaned/aa_df.csv"))
+```
