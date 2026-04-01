@@ -19,16 +19,16 @@ library(raster)         # Spatial data handling
 library(sp)             # Spatial data classes
 ```
 # read in data
-```{r}
-setwd("/Users/ndabagia/Desktop/classes//GlobalChange/HSM_mosquito/Intro_to_the_dataset")
-mosquito_data <- read.csv("mosquito_data.csv", row.names=1)
+```{r eval=FALSE, include=FALSE}
+setwd("/Users/ndabagia/Desktop/classes//GlobalChange/HSM_mosquito")
+mosquito_data <- read.csv("mosquito_final.csv", row.names=1)
 
 ```
 
 
 Hmmmm...this picture is incomplete with the NAs
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 #Use na.rm = TRUE to filter them out
 mosquito_data %>% 
   group_by(Species) %>% 
@@ -39,15 +39,22 @@ mosquito_data %>%
 species_int <- mosquito_data |>
   filter(Species == "Aedes aegypti" | 
            Species == "Culex tarsalis"|
-           Species == "Culex quinquefasciatus")
+           Species == "Culex quinquefasciatus"|
+           Species == "None"|
+           Species == "No mosquitoes collected"|
+           is.na(Species))
 
 # add a week column to 1-52 mosquito dataset
-species_int <- species_int %>%
-  mutate(
-    Date = as.Date(Date),
-    Week = isoweek(Date)
-  ) %>%
-  relocate(Week, .after = 1)
+species_int$Week <- strftime(species_int$Date, format = "%V")
+species_int$Year <- strftime(species_int$Date, format = "%G" )
+
+species_int <- species_int |>
+  #mutate(
+   # Date = as.Date(Date),
+    #Week = isoweek(Date)
+  #) %>%
+  relocate(Week, .after = 1)|>
+  relocate(Year, .after = 2)
 
 # make a bounding box to filter the observations to bounded box for Maricopa county/metro phoenix
 # West: -112.573997704 North: 33.7987N East: -111.5837 South: 33.2043
@@ -56,8 +63,143 @@ maricopa_obs <- species_int |>
          Longitude <= -111.5837 & Longitude  >=  -112.573997704
 )
 
+# sum(is.na(maricopa_obs$Females)) ensure zero NA's in key column
+
+# add presence column a la Oskar
+maricopa_obs %>% 
+  mutate(Presence = ifelse(Males == 0 & Females == 0, 0, 1) )
+
+# str(maricopa_obs)
+maricopa_obs |>
+  filter(Week > 52)|>
+  print()
+
+```
+### write the resulting file to local
+```{r}
+setwd("/Users/ndabagia/Desktop/classes//GlobalChange/HSM_mosquito")
+
+mosquito_final <- read.csv("mosquito_final.csv")
+
 ```
 
+```{r eval=FALSE, include=FALSE}
+setwd("/Users/ndabagia/Desktop/classes//GlobalChange/HSM_mosquito")
+NDVI <- raster("NDVI.tif")
+MNDWI <- raster("MNDWI.tif")
+
+lonlat_df <- data.frame(
+  Longitude = mosquito_final$Longitude,
+  Latitude = mosquito_final$Latitude
+)
+
+mosquito_final$NDVI <- raster::extract(NDVI, lonlat_df)
+mosquito_final$MNDWI <- raster::extract(MNDWI, lonlat_df)
+
+plot(x = mosquito_final$Longitude, y = mosquito_final$Latitude, data = mosquito_final$NDVI)
+plot(x = mosquito_final$Longitude, y = mosquito_final$Latitude, data = mosquito_final$MNDWI)
+#these are crappy maps, but it shows some idea of where the sampling points are
+#note to self to make better ones later in leaflet
+# add a column for overall presence / absence
+mosquito_final <- mosquito_final %>% 
+mutate(
+  Presence = ifelse(Males ==0 & Females == 0, 0, 1)
+)
+#write.csv(mosquito_final, "mosquito_final.csv")
+```
+## do the fancy manipulation to the data that Desiree recommended
+```{r}
+# create columns with each of the three species
+
+mosquito_final$cq <- NA
+mosquito_final$ct <- NA
+mosquito_final$aa <- NA
+mosquito_final$count <- mosquito_final$Males + mosquito_final$Females
+
+# create presence and absence for each species
+mosquito_final$cq <- as.integer(mosquito_final$Species == "Culex quinquefasciatus" & mosquito_final$count > 0)
+mosquito_final$ct <- as.integer(mosquito_final$Species == "Culex tarsalis" & mosquito_final$count > 0)
+mosquito_final$aa <- as.integer(mosquito_final$Species == "Aedes aegypti" & mosquito_final$count > 0)
+
+# merge rows (group_by) and summarize the three species
+mosq_new <- mosquito_final |>
+  group_by(
+    Latitude, Longitude, YW, tavg1, tavg2, tmin1, tmin2, tmax1, tmax2, prec1, prec2, humd1, humd2, NDVI, MNDWI
+  ) |>
+  summarize(
+    cq=max(cq), ct=max(ct), aa=max(aa)
+  )
+# omit NAs
+mosq_new <- na.omit(mosq_new)
+
+# determine presence and absence numbers
+
+sum(mosq_new$cq)
+sum(mosq_new$ct)
+sum(mosq_new$aa)
+
+
+
+# subsetting to get all the absences
+
+cq0 <- subset(mosq_new, cq==0)
+ct0 <- subset(mosq_new, ct==0)
+aa0 <- subset(mosq_new, aa==0)
+# subsetting to get the presences
+cq1 <- subset(mosq_new, cq==1)
+ct1 <- subset(mosq_new, ct==1)
+aa1 <- subset(mosq_new, aa==1)
+
+### equalize the number of presences and absences 
+
+cq0_samp <- cq0[sample(nrow(cq0),nrow(cq1), replace = FALSE),]
+ct0_samp <- ct0[sample(nrow(ct0),nrow(ct1), replace = FALSE),]
+aa0_samp <- aa0[sample(nrow(aa0),nrow(aa1), replace = FALSE),]
+
+# now bind the absences and presences together
+
+cq <- rbind(cq1, cq0_samp)
+ct <- rbind(ct1, ct0_samp)
+aa <- rbind(aa1, aa0_samp)
+
+### 
+
+```
+
+# randomForest via Desiree for each mosquito species
+```{r}
+set.seed(123)
+ct_rf <- randomForest(x=ct[, 4:15], y=as.factor(ct$ct), nodesize = 10, # xx[,4:15] accounts for the 11 predictors
+                      ntree = 100) 
+# nodesize helps with speed and avoids overfitting | ntree helps again with speed
+
+cq_rf <- randomForest(x=cq[, 4:15], y=as.factor(cq$cq), nodesize = 10, 
+                      ntree = 100) 
+# nodesize helps with speed and avoids overfitting | ntree helps again with speed
+aa_rf <- randomForest(x=aa[, 4:15], y=as.factor(aa$aa), nodesize = 10, 
+                      ntree = 100) 
+#_______________________________#
+### take out ndvi and mndwi
+ct_rf_simple <- randomForest(x=ct[, 4:13], y=as.factor(ct$ct), nodesize = 10, # xx[,4:15] accounts for the 11 predictors
+                      ntree = 100) 
+# nodesize helps with speed and avoids overfitting | ntree helps again with speed
+
+cq_rf_simple <- randomForest(x=cq[, 4:13], y=as.factor(cq$cq), nodesize = 10, 
+                      ntree = 100) 
+# nodesize helps with speed and avoids overfitting | ntree helps again with speed
+aa_rf_simple <- randomForest(x=aa[, 4:13], y=as.factor(aa$aa), nodesize = 10, 
+                      ntree = 100) 
+
+```
+### variable importance
+```{r}
+randomForest:: varImpPlot(ct_rf)
+randomForest:: varImpPlot(cq_rf)
+randomForest:: varImpPlot(aa_rf)
+randomForest:: varImpPlot(ct_rf_simple)
+randomForest:: varImpPlot(cq_rf_simple)
+randomForest:: varImpPlot(aa_rf_simple)
+```
 #________________
 # below this line is future stuff, so ignore
 #__________________
@@ -66,23 +208,33 @@ maricopa_obs <- species_int |>
 ```{r}
 # commence with the modeling
 
+  # lagged two weeks
+# weekly average humidity
+# weekly average temp
+# weekly maximum temp
+# weekly minimum temp
+# weekly average precipitation
+# NDVI
+# NMDWI and check correlation with NDVI
+
+
 # Define study extent based on occurrence data
 # Add buffer around points
-lon_range <- range(maricopa_obs$Longitude)
-lat_range <- range(maricopa_obs$Latitude)
+lon_range <- range(mosquito_final$Longitude)
+lat_range <- range(mosquito_final$Latitude)
 buffer <- 2  # degrees
 
 study_extent <- extent(lon_range[1] - buffer, lon_range[2] + buffer,
                       lat_range[1] - buffer, lat_range[2] + buffer)
 
 # Crop climate data to study area
+
+# 
 bioclim_crop <- crop(bioclim_data, study_extent)
 
 
 print(names(bioclim_crop))
 ######
-
-
 ```
 
 ```{r}
@@ -106,7 +258,9 @@ nrow(presence_complete) # FInal number of presence points
 
 # Generate pseudo-absence (background) points
 # We'll use 10x the number of presences (common practice)
-n_background <- nrow(presence_complete) * 10
+
+
+n_background <- (sum(mosquito_final$Presence==0) + 31203) * 10 # 10x the number of presences
 
 # Generate random background points using terra
 background_points <- spatSample(env_vars, size = n_background, 
@@ -143,9 +297,9 @@ background_df <- data.frame(
 model_data <- rbind(presence_df, background_df)
 
 # Split data for training and testing (80/20 split)
-train_indices <- sample(1:nrow(model_data), size = 0.8 * nrow(model_data))
-train_data <- model_data[train_indices, ]
-test_data <- model_data[-train_indices, ]
+train_indices <- sample(1:nrow(mosquito_final), size = 0.8 * nrow(mosquito_final))
+train_data <- mosquito_final[train_indices, ]
+test_data <- mosquito_final[-train_indices, ]
 
 nrow(train_data)
 nrow(test_data)
@@ -155,10 +309,10 @@ nrow(test_data)
 ### GLM Model
 ```{r}
 # Using all environmental predictors plus interactions
-glm_model <- glm(presence ~ AnnualTemp + MaxTempWarmest + 
-                   AnnualPrecip + PrecipSeasonality +
-                   AnnualTemp:AnnualPrecip,  # Interaction term
-                 data = train_data,
+glm_model <- glm(Presence ~ tavg1 + tmin1 + 
+                   tmax1 + prec1 + humd1 + 
+                   NDVI + MNDWI,  # Interaction term
+                 data = mosquito_final,
                  family = binomial(link = "logit"))
 
 
@@ -181,13 +335,14 @@ map("world", add = TRUE)
 # Random Forest is a machine learning ensemble method
 
 # Prepare data - Random Forest needs factor for classification
-train_data$presence_factor <- as.factor(train_data$presence)
+mosquito_final$presence_factor <- as.factor(mosquito_final$Presence)
 
 # Build Random Forest model
 # ntree = number of trees, mtry = variables per split
 rf_model <- randomForest(
-  presence_factor ~ AnnualTemp + MaxTempWarmest + 
-    AnnualPrecip + PrecipSeasonality,
+  Presence ~ tavg1 + tmin1 + 
+    tmax1 + prec1 + 
+    humd1 + NDVI + MNDWI,
   data = train_data,
   ntree = 500,
   importance = TRUE
