@@ -59,39 +59,47 @@ write.csv(test_data, file = here("Natalie/data_cleaned/test_train/test_data_cq.c
 
 
 
-SDM - GLM **NEED UPDATE this**
+GLM - Cq
 ```{r}
-glm_model <- glm(cq ~ NDVI+ MNDWI+
+glm_model_cq2_h20 <- glm(cq ~ NDVI+ MNDWI+
                                  tavg2+ tmin2+ tmax2+
                                  prec2+ humd2, data = train_data, family = binomial(link = "logit"))
 
-glm_predict <- terra::predict(template, glm_model, type = "response") #need to make a raster of the data
+glm_model_cq1_h2o <- glm(cq ~ NDVI+ MNDWI+
+                                 tavg1+ tmin1+ tmax1+
+                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
 
-plot(glm_predict)
+glm_model_cq2 <- glm(cq ~ tavg2+ tmin2+ tmax2+
+                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
+
+
+glm_model_cq1 <- glm(cq ~ tavg1+ tmin1+ tmax1+
+                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
+
 
 ```
 
 
-
-
-
+RF-Cq
 ```{r}
-#creating glm model
-glm_model <- glm(presence ~ Mean_Diurnal_range + Isothermality + Mean_Temp_of_Wettest_Quarter + Mean_temp_of_Driest_quarter + Precipitation_of_wettest_Month + Precipitation_of_driest_month + Precipitation_Seasonality + Precipitation_of_Warmest_Quarter + Precipitation_of_coldest_Quart, data = train_data, family = binomial(link = "logit"))
 
-print(summary(glm_model))
+rf_model_cq1_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
+                       "tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
 
-#predicting distrubtion based on calculated model
-glm_predict <- predict(env_vars, glm_model, type = "response")
+varImpPlot(rf_model_cq1_h2o)
 
-plot(glm_predict, main = "GLM: Predicted Probability of Presence",
-     xlab = "Longitude", ylab = "Latitude") 
+rf_model_cq2_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
+                      "tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_cq2_h2o)
 
-save(glm_predict, file =here("Data_Analysis/GLM/glm_predict_sp45.Rdata"))
+rf_model_cq1 <- randomForest(x = train_data[, c("tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_cq1)
+
+rf_model_cq2 <- randomForest(x = train_data[, c("tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_cq2)
 
 
 ```
-
 
 
 
