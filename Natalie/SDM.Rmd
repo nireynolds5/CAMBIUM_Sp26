@@ -5,7 +5,6 @@ date: "2026-03-01"
 ---
 
 Loading Packages
-
 ```{r}
 library(tidyverse) #data management
 library(dplyr) # data managemt
@@ -24,17 +23,17 @@ library(gstat)
 Loading in Data
 ```{r}
 
-cq <- read.csv(here("Natalie/data_cleaned/cq_df.csv"))
+aa <- read.csv(here("Natalie/data_cleaned/aa_df.csv"))
 ct <- read.csv(here("Natalie/data_cleaned/ct_df.csv"))
 aa<- read.csv(here("Natalie/data_cleaned/aa_df.csv"))
 
 ```
 
-Making Spatial Rasters for environment data
+Making Spatial Rasters for environment data  **Testing to make easier for Maxent?**
 ```{r}
 
-cq_vec <- terra :: vect(cq, geom = c("Latitude", "Longitude"), crs = "EPSG:4326") #making a spat_raster
-plot(cq_vec)
+aa_vec <- terra :: vect(aa, geom = c("Latitude", "Longitude"), crs = "EPSG:4326") #making a spat_raster
+plot(aa_vec)
 
 template <- terra :: rast( xmin =33.2043, xmax= 33.7987, ymin= -112.573997704, ymax = -111.5837, res = 0.01, crs = "EPSG:4326")
 
@@ -45,67 +44,168 @@ template <- terra :: rast( xmin =33.2043, xmax= 33.7987, ymin= -112.573997704, y
 
 Test and train Data frames
 ```{r}
-#splitting into training data
-train_indices <- sample(1:nrow(cq), size = 0.8 *nrow(cq)) #taking a random sample from cq
-train_data <- cq[train_indices,]
-test_data <- cq[-train_indices,]
-nrow(train_data) 
-nrow(test_data) 
+#splitting into training data --> aa
+train_indices_aa <- sample(1:nrow(aa), size = 0.8 *nrow(aa)) #taking a random sample from aa
+train_data_aa <- aa[train_indices,]
+test_data_aa <- aa[-train_indices,]
+nrow(train_data_aa) 
+nrow(test_data_aa) 
 
-write.csv(train_data, file = here("Natalie/data_cleaned/test_train/train_data_cq.csv"))
-write.csv(test_data, file = here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
+write.csv(train_data, file = here("Natalie/data_cleaned/test_train/train_data_aa.csv"))
+write.csv(test_data, file = here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
+
+
+
+# Ct
+train_indices_ct <- sample(1:nrow(ct), size = 0.8 *nrow(ct)) #taking a random sample from aa
+train_data_ct <- ct[train_indices,]
+test_data_ct <- ct[-train_indices,]
+nrow(train_data_ct) 
+nrow(test_data_ct) 
+
+write.csv(train_data_ct, file = here("Natalie/data_cleaned/test_train/train_data_ct.csv"))
+write.csv(test_data_ct, file = here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
+
+
+
+#AA
+train_indices_aa <- sample(1:nrow(aa), size = 0.8 *nrow(ct)) #taking a random sample from aa
+train_data_ct <- ct[train_indices,]
+test_data_ct <- ct[-train_indices,]
+nrow(train_data_ct) 
+nrow(test_data_ct) 
+
+write.csv(train_data_ct, file = here("Natalie/data_cleaned/test_train/train_data_ct.csv"))
+write.csv(test_data_ct, file = here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
 ```
 
 
-
-
-GLM - Cq
+GLM - aa
 ```{r}
-glm_model_cq2_h20 <- glm(cq ~ NDVI+ MNDWI+
+glm_model_aa2_h20 <- glm(aa ~ NDVI+ MNDWI+
                                  tavg2+ tmin2+ tmax2+
                                  prec2+ humd2, data = train_data, family = binomial(link = "logit"))
 
-glm_model_cq1_h2o <- glm(cq ~ NDVI+ MNDWI+
+glm_model_aa1_h2o <- glm(aa ~ NDVI+ MNDWI+
                                  tavg1+ tmin1+ tmax1+
                                  prec1+ humd1, data = train_data, family = binomial(link = "logit"))
 
-glm_model_cq2 <- glm(cq ~ tavg2+ tmin2+ tmax2+
+glm_model_aa2 <- glm(aa ~ tavg2+ tmin2+ tmax2+
                                  prec2+ humd2, data = train_data, family = binomial(link = "logit"))
 
 
-glm_model_cq1 <- glm(cq ~ tavg1+ tmin1+ tmax1+
+glm_model_aa1 <- glm(aa ~ tavg1+ tmin1+ tmax1+
+                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
+
+
+```
+
+GLM ct
+
+```{r}
+glm_model_ct2_h20 <- glm(ct ~ NDVI+ MNDWI+
+                                 tavg2+ tmin2+ tmax2+
+                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
+
+glm_model_ct1_h2o <- glm(ct ~ NDVI+ MNDWI+
+                                 tavg1+ tmin1+ tmax1+
+                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
+
+glm_model_ct2 <- glm(ct ~ tavg2+ tmin2+ tmax2+
+                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
+
+
+glm_model_ct1 <- glm(ct ~ tavg1+ tmin1+ tmax1+
                                  prec1+ humd1, data = train_data, family = binomial(link = "logit"))
 
 
 ```
 
 
-RF-Cq
+GLM aa
 ```{r}
+glm_model_aa2_h20 <- glm(aa ~ NDVI+ MNDWI+
+                                 tavg2+ tmin2+ tmax2+
+                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
 
-rf_model_cq1_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
-                       "tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
+glm_model_aa1_h2o <- glm(aa ~ NDVI+ MNDWI+
+                                 tavg1+ tmin1+ tmax1+
+                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
 
-varImpPlot(rf_model_cq1_h2o)
+glm_model_aa2 <- glm(aa ~ tavg2+ tmin2+ tmax2+
+                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
 
-rf_model_cq2_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
-                      "tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_cq2_h2o)
 
-rf_model_cq1 <- randomForest(x = train_data[, c("tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_cq1)
-
-rf_model_cq2 <- randomForest(x = train_data[, c("tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_cq2)
+glm_model_aa1 <- glm(aa ~ tavg1+ tmin1+ tmax1+
+                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
 
 
 ```
 
 
 
+RF-aa
+```{r}
+
+rf_model_aa1_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
+                       "tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$aa), nodesize = 10, ntree = 100)
+
+varImpPlot(rf_model_aa1_h2o)
+
+rf_model_aa2_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
+                      "tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$aa), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_aa2_h2o)
+
+rf_model_aa1 <- randomForest(x = train_data[, c("tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$aa), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_aa1)
+
+rf_model_aa2 <- randomForest(x = train_data[, c("tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$aa), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_aa2)
 
 
+```
 
+
+RF -ct
+```{r}
+rf_model_ct1_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
+                       "tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$ct), nodesize = 10, ntree = 100)
+
+varImpPlot(rf_model_ct1_h2o)
+
+rf_model_ct2_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
+                      "tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$ct), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_ct2_h2o)
+
+rf_model_ct1 <- randomForest(x = train_data[, c("tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$ct), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_ct1)
+
+rf_model_ct2 <- randomForest(x = train_data[, c("tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$ct), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_ct2)
+
+
+```
+
+
+rf - aa
+```{r}
+rf_model_aa1_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
+                       "tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$aa), nodesize = 10, ntree = 100)
+
+varImpPlot(rf_model_aa1_h2o)
+
+rf_model_aa2_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
+                      "tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$aa), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_aa2_h2o)
+
+rf_model_aa1 <- randomForest(x = train_data[, c("tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$aa), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_aa1)
+
+rf_model_aa2 <- randomForest(x = train_data[, c("tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$aa), nodesize = 10, ntree = 100)
+varImpPlot(rf_model_aa2)
+
+
+```
 
 
 
