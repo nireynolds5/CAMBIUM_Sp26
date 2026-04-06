@@ -275,9 +275,25 @@ rf_model_aa1 <- randomForest(x = train_data_aa[, c("tavg1", "tmin1", "tmax1", "p
 
 
 
-
 MaxEnt model
+```{r}
+maxent_path <- system.file("java", package="dismo")
+maxent_path
+
+
+```
+
+
+Ensemble
 ```{r}
 
 ```
+
+
+
+
+
+
+
+
 
