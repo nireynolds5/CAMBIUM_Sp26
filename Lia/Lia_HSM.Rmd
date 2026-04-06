@@ -1,0 +1,283 @@
+---
+title: "Lia_HSM"
+output: html_document
+date: "2026-04-06"
+---
+Attempting HSM
+Starting from where we got in class after making Random Forest
+Goal: ensemble with random forest and maxent
+
+Libraries
+```{r}
+library(tidyverse)
+library(raster)
+library(terra)
+library(randomForest)
+library(rJava)
+library(PresenceAbsence)
+library(here)
+library(ggplot2)
+library(biomod2)
+library(gstat)
+```
+
+
+Load final data from Git
+```{r}
+mosquito_final <- read_csv(here("Natalie/data_cleaned/mosquito_final_NDVI_MNDWI.csv"))
+```
+
+
+Preparing training data (from class 3/30, following Natalie's code), creating absences
+```{r}
+#add species columns
+mosquito_final$cq <- NA
+mosquito_final$ct <- NA
+mosquito_final$aa <- NA
+mosquito_final$count <- mosquito_final$Males + mosquito_final$Females
+
+# create presence and absence for each species
+mosquito_final$cq <- as.integer(mosquito_final$Species == "Culex quinquefasciatus" & mosquito_final$count > 0)
+mosquito_final$ct <- as.integer(mosquito_final$Species == "Culex tarsalis" & mosquito_final$count > 0)
+mosquito_final$aa <- as.integer(mosquito_final$Species == "Aedes aegypti" & mosquito_final$count > 0)
+
+# merge rows (group_by) and summarize the three species
+mosq_new <- mosquito_final |>
+  group_by(
+    Latitude, Longitude, YW, tavg1, tavg2, tmin1, tmin2, tmax1, tmax2, prec1, prec2, humd1, humd2, NDVI, MNDWI
+  ) |>
+  summarize(
+    cq=max(cq), ct=max(ct), aa=max(aa)
+  )
+# omit NAs
+mosq_new <- na.omit(mosq_new)
+
+# determine presence and absence numbers (checking numbers)
+sum(mosq_new$cq) #100918 observations
+sum(mosq_new$ct) #36995 observations
+sum(mosq_new$aa) #79614 observations
+
+# Creating absent frames
+cq0 <- subset(mosq_new, cq==0)
+ct0 <- subset(mosq_new, ct==0)
+aa0 <- subset(mosq_new, aa==0)
+
+# creating present frame
+cq1 <- subset(mosq_new, cq==1)
+ct1 <- subset(mosq_new, ct==1)
+aa1 <- subset(mosq_new, aa==1)
+
+### equalize the number of presences and absences 
+#**Switch for absent if need to make equal!**
+cq0_samp <- cq0[sample(nrow(cq0),nrow(cq1), replace = FALSE),]
+ct0_samp <- ct0[sample(nrow(ct0),nrow(ct1), replace = FALSE),]
+aa0_samp <- aa0[sample(nrow(aa0),nrow(aa1), replace = FALSE),]
+
+# now bind the absences and presences together
+cq <- rbind(cq1, cq0_samp)
+ct <- rbind(ct1, ct0_samp)
+aa <- rbind(aa1, aa0_samp)
+
+#Natalie saved csv, but I'll just use hers since she did that already
+#write.csv(cq, here("Natalie/data_cleaned/cq_df.csv"))
+#write.csv(ct, here("Natalie/data_cleaned/ct_df.csv"))
+#write.csv(aa, here("Natalie/data_cleaned/aa_df.csv")) 
+```
+
+
+Train & test model
+```{r}
+#read in the data we just made
+cq <- read.csv(here("Natalie/data_cleaned/cq_df.csv"))
+ct <- read.csv(here("Natalie/data_cleaned/ct_df.csv"))
+aa<- read.csv(here("Natalie/data_cleaned/aa_df.csv"))
+
+#cq train model, test to ensure no overfitting
+train_indices_cq <- sample(1:nrow(cq), size = 0.8 *nrow(cq)) #taking a random sample from cq
+train_data_cq <- cq[train_indices_cq,]
+test_data_cq <- cq[-train_indices_cq,]
+nrow(train_data_cq) #161468
+nrow(test_data_cq) #40368
+
+#write.csv(train_data, file = here("Natalie/data_cleaned/test_train/train_data_cq.csv"))
+#write.csv(test_data, file = here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
+
+#ct train model
+train_indices_ct <- sample(1:nrow(ct), size = 0.8 *nrow(ct)) #taking a random sample from ct
+train_data_ct <- ct[train_indices_ct,]
+test_data_ct <- ct[-train_indices_ct,]
+
+#aa train model
+train_indices_aa <- sample(1:nrow(aa), size = 0.8 *nrow(aa)) #taking a random sample from cq
+train_data_aa <- cq[train_indices_aa,]
+test_data_aa <- cq[-train_indices_aa,]
+
+```
+
+
+GLMs
+
+cq
+```{r}
+###cq first
+#cq 2 weeks with water
+glm_model_cq2_h20 <- glm(cq ~ NDVI + MNDWI + tavg2+ tmin2+ tmax2 + prec2 + humd2, 
+                         data = train_data_cq, 
+                         family = binomial(link = "logit"))
+
+#cq 1 week with water
+glm_model_cq1_h20 <- glm(cq ~ NDVI + MNDWI + tavg1 + tmin1 + tmax1 + prec1 + humd1, 
+                         data = train_data_cq, 
+                         family = binomial(link = "logit"))
+
+#cq 2 weeks without water
+glm_model_cq2 <- glm(cq ~ tavg2 + tmin2+ tmax2 + prec2 + humd2, 
+                         data = train_data_cq, 
+                         family = binomial(link = "logit"))
+
+#cq 1 week without water
+glm_model_cq1 <- glm(cq ~ tavg1 + tmin1+ tmax1 + prec1 + humd1, 
+                         data = train_data_cq, 
+                         family = binomial(link = "logit"))
+
+```
+ct
+```{r}
+###ct 
+#ct 2 weeks with water
+glm_model_ct2_h20 <- glm(ct ~ NDVI + MNDWI + tavg2+ tmin2+ tmax2 + prec2 + humd2, 
+                         data = train_data_ct, 
+                         family = binomial(link = "logit"))
+
+#ct 1 week with water
+glm_model_ct1_h20 <- glm(ct ~ NDVI + MNDWI + tavg1 + tmin1 + tmax1 + prec1 + humd1, 
+                         data = train_data_ct, 
+                         family = binomial(link = "logit"))
+
+#ct 2 weeks without water
+glm_model_ct2 <- glm(ct ~ tavg2 + tmin2+ tmax2 + prec2 + humd2, 
+                         data = train_data_ct, 
+                         family = binomial(link = "logit"))
+
+#ct 1 week without water
+glm_model_ct1 <- glm(ct ~ tavg1 + tmin1+ tmax1 + prec1 + humd1, 
+                         data = train_data_ct, 
+                         family = binomial(link = "logit"))
+```
+aa
+```{r}
+###aa
+#aa 2 weeks with water
+glm_model_aa2_h20 <- glm(aa ~ NDVI + MNDWI + tavg2+ tmin2+ tmax2 + prec2 + humd2, 
+                         data = train_data_aa, 
+                         family = binomial(link = "logit"))
+
+#aa 1 week with water
+glm_model_aa1_h20 <- glm(aa ~ NDVI + MNDWI + tavg1 + tmin1 + tmax1 + prec1 + humd1, 
+                         data = train_data_aa, 
+                         family = binomial(link = "logit"))
+
+#aa 2 weeks without water
+glm_model_aa2 <- glm(aa ~ tavg2 + tmin2+ tmax2 + prec2 + humd2, 
+                         data = train_data_aa, 
+                         family = binomial(link = "logit"))
+
+#aa 1 week without water
+glm_model_aa1 <- glm(aa ~ tavg1 + tmin1+ tmax1 + prec1 + humd1, 
+                         data = train_data_aa, 
+                         family = binomial(link = "logit"))
+```
+
+
+
+Random forest model
+
+cq
+```{r}
+#From Desiree
+#cq 2 weeks w water
+rf_model_cq2_h2o <- randomForest(x = train_data_cq[, c("tavg2", "tmin2", "tmax2", "prec2", "humd2", "NDVI", "MNDWI")], 
+                                 y=as.factor(train_data_cq$cq), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+
+#cq 1 week w water
+rf_model_cq1_h2o <- randomForest(x = train_data_cq[, c("tavg1", "tmin1", "tmax1", "prec1", "humd1", "NDVI", "MNDWI")], 
+                                 y=as.factor(train_data_cq$cq), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+
+#cq 2 weeks no water
+rf_model_cq2 <- randomForest(x = train_data_cq[, c("tavg2", "tmin2", "tmax2", "prec2", "humd2")], 
+                                 y=as.factor(train_data_cq$cq), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+
+#cq 1 week no water
+rf_model_cq1 <- randomForest(x = train_data_cq[, c("tavg1", "tmin1", "tmax1", "prec1", "humd1")], 
+                                 y=as.factor(train_data_cq$cq), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+```
+ct
+```{r}
+#ct 2 weeks w water
+rf_model_ct2_h2o <- randomForest(x = train_data_ct[, c("tavg2", "tmin2", "tmax2", "prec2", "humd2", "NDVI", "MNDWI")], 
+                                 y=as.factor(train_data_ct$ct), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+
+#ct 1 week w water
+rf_model_ct1_h2o <- randomForest(x = train_data_ct[, c("tavg1", "tmin1", "tmax1", "prec1", "humd1", "NDVI", "MNDWI")], 
+                                 y=as.factor(train_data_ct$ct), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+
+#ct 2 weeks no water
+rf_model_ct2 <- randomForest(x = train_data_ct[, c("tavg2", "tmin2", "tmax2", "prec2", "humd2")], 
+                                 y=as.factor(train_data_ct$ct), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+
+#ct 1 week no water
+rf_model_ct1 <- randomForest(x = train_data_ct[, c("tavg1", "tmin1", "tmax1", "prec1", "humd1")], 
+                                 y=as.factor(train_data_ct$ct), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+```
+aa
+```{r}
+#aa 2 weeks w water
+rf_model_aa2_h2o <- randomForest(x = train_data_aa[, c("tavg2", "tmin2", "tmax2", "prec2", "humd2", "NDVI", "MNDWI")], 
+                                 y=as.factor(train_data_aa$aa), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+
+#aa 1 week w water
+rf_model_aa1_h2o <- randomForest(x = train_data_aa[, c("tavg1", "tmin1", "tmax1", "prec1", "humd1", "NDVI", "MNDWI")], 
+                                 y=as.factor(train_data_aa$aa), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+
+#aa 2 weeks no water
+rf_model_aa2 <- randomForest(x = train_data_aa[, c("tavg2", "tmin2", "tmax2", "prec2", "humd2")], 
+                                 y=as.factor(train_data_aa$aa), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+
+#aa 1 week no water
+rf_model_aa1 <- randomForest(x = train_data_aa[, c("tavg1", "tmin1", "tmax1", "prec1", "humd1")], 
+                                 y=as.factor(train_data_aa$aa), 
+                                 nodesize = 10, 
+                                 ntree = 100)
+```
+
+
+
+
+
+MaxEnt model
+```{r}
+
+```
+
