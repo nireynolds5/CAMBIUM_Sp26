@@ -8,7 +8,7 @@ load library
 library(tidyverse)
 ```
 
-create columns
+create columns **line to read in data frame**
 ```{r}
 mosquito$cq <- NA
 mosquito$ct <- NA
