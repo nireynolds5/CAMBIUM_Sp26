@@ -274,13 +274,25 @@ rf_model_aa1 <- randomForest(x = train_data_aa[, c("tavg1", "tmin1", "tmax1", "p
 
 
 
-
-MaxEnt model
+Maximum Entropy model (following the book)
+*book says not to use maxent if we have both presence and absence data*
+what is a true absence?
 ```{r}
 maxent_path <- system.file("java", package="dismo")
 maxent_path
 
 
+```
+
+AUC results
+```{r}
+#Calculating AUC from GLMs
+glm_auc_df <- data.frame(rf_test_pred[,1], test_presence, glm_test_pred[,2])
+auc_glm <- auc(glm_auc_df, which.model =1, na.rm = TRUE)
+  
+#Calculating AUC from RFs
+rf_auc_df <- data.frame(rf_test_pred[,1], test_presence, rf_test_pred[,2])
+auc_rf <- auc(rf_auc_df, which.model =1, na.rm = TRUE)
 ```
 
 
@@ -289,9 +301,70 @@ Ensemble
 
 ```
 
+-------
+Notes from class 4/6/2026:
 
+ecological niche factor analysis (in envelopes and distance based approaches in book part III chapter 9, page 161)
+```{r}
+#GLM cq predict using predict function
+#to visualize whole cq dataset, input into new column in cq
+cq$glm_cq2_h2o_predict <- predict(glm_model_cq2_h20, cq) #why are some negative
 
+#plotting
+library(leaflet)
+cq_map_2_h2o <- leaflet() |> 
+  addProviderTiles(providers$Esri) |> 
+  addCircleMarkers(data = cq, ~Longitude, ~Latitude, radius = 1, color = cq$glm_cq2_h2o_predict)
 
+cq_map_2_h2o
+
+#making a subset with less data to visualize using one week
+test <- cq |> filter(
+  YW == "YW202128"
+)
+
+#making a map with ggplot
+
+#glm_model_cq2_h20 <- read_rds(from box)
+#prec2 <- raster(path to yw202128 tif)
+#copy for all env vars #is this on box? 
+#identify a range of weeks with the most activity to do this for #use tidy to group by week and summarize
+#then read all the rasters into a stack
+#env202128 <- stack(NDVI, MNDWI, tavg2, tmin2, tmax2, prec2, humd2)
+#plot(env202128) #to see all layers
+#create a raster layer of the prediction
+#cq202128 <- predict(env202128, glm_model_cq2_h2o)
+
+#use true skill statistic to look at true positive and negative rates of training data on test data, determines a threshold of deciding presence or absence
+
+```
+
+Inspiration from Desiree on how to present data:
+sensitivity, specificity, maxSS
+response curves to env vars
+identify where we expect to see species in a given week or over time, or hotspots
+categories: maps, response curves, accuracy/model fit numbers of each model, variable significance, comparing the fit of dif models, example or aggregated output
+
+creating response curves
+```{r}
+cq_sub <- mosquito_final[sample(nrow(mosquito_final), 10000),]
+
+library(biomod2)
+library(ggplot2)
+
+rp <- response.plot2(model = c("glm_model_cq2_h2o"), 
+                     data = cq_sub[, c("NDVI", "MNDWI", "tavg", "tmin2", "tmax2", "prec2", "humd2")], 
+                     show.variables = c("NDVI", "MNDWI", "tavg", "tmin2", "tmax2", "prec2", "humd2"), 
+                     fixed.var.metric = "mean", 
+                     plot = FALSE, use.formal.names = TRUE) 
+#response plot, we will use multiple models in future
+#response.plot2 is depreciated, doesn't work
+
+gg.rp <- rp |> ggplot(aes = expl.val, y = pred.val)
+```
+*pick weeks for env tifs*
+*pick 1 or 2 week lag for all env vars*
+*use bm_PlotResponseCurves*
 
 
 
