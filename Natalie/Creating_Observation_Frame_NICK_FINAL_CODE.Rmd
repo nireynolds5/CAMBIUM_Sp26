@@ -91,7 +91,7 @@ mutate(
 ```
 
 
-Generating Pseuo Absences
+Generating Absences
 ```{r}
 # create columns with each of the three species
 
