@@ -109,7 +109,9 @@ mutate(
 ```
 ## do the fancy manipulation to the data that Desiree recommended
 ```{r}
-# create columns with each of the three species
+ 
+library(tidyverse)
+library(randomForest)
 
 mosquito_final$cq <- NA
 mosquito_final$ct <- NA
@@ -166,29 +168,55 @@ aa <- rbind(aa1, aa0_samp)
 
 ```
 
-# randomForest via Desiree for each mosquito species
+# randomForest for each mosquito species
 ```{r}
 set.seed(123)
-ct_rf <- randomForest(x=ct[, 4:15], y=as.factor(ct$ct), nodesize = 10, # xx[,4:15] accounts for the 11 predictors
+#cor(aa[, 4:15], use = "complete.obs")
+#cor(cq[, 4:15], use = "complete.obs")
+#cor(ct[, 4:15], use = "complete.obs")
+
+# variables we identified
+# Aa - prec1, prec2, tmin2, tavg2, humd2, tmax2
+# Cq - prec1, prec2, tmin1, tavg1, tmax1, humd2
+# Ct - prec1, prec2, tmin1, tavg1, tmax1, humd2
+
+ct_rf <- randomForest(x=ct[,c("prec1", "prec2", "tmin1", "tavg1", 
+                              "tmax1", "humd2", "NDVI", "MNDWI")], 
+                      y=as.factor(ct$ct), 
+                      nodesize = 10, # xx[,4:15] accounts for the 11 predictors
                       ntree = 100) 
 # nodesize helps with speed and avoids overfitting | ntree helps again with speed
 
-cq_rf <- randomForest(x=cq[, 4:15], y=as.factor(cq$cq), nodesize = 10, 
+cq_rf <- randomForest(x=cq[,c("prec1", "prec2", "tmin1", "tavg1", 
+                              "tmax1", "humd2", "NDVI", "MNDWI")], 
+                      y=as.factor(cq$cq), nodesize = 10, 
                       ntree = 100) 
 # nodesize helps with speed and avoids overfitting | ntree helps again with speed
-aa_rf <- randomForest(x=aa[, 4:15], y=as.factor(aa$aa), nodesize = 10, 
+aa_rf <- randomForest(x=aa[,c("prec1", "prec2", "tmin2", "tavg2", 
+                              "tmax2", "humd2", "NDVI", "MNDWI")], 
+                      y=as.factor(aa$aa), 
+                      nodesize = 10, 
                       ntree = 100) 
 #_______________________________#
 ### take out ndvi and mndwi
-ct_rf_simple <- randomForest(x=ct[, 4:13], y=as.factor(ct$ct), nodesize = 10, # xx[,4:15] accounts for the 11 predictors
+ct_rf_simple <- randomForest(x=ct[,c("prec1", "prec2", "tmin1", 
+                                     "tavg1", "tmax1", "humd2")], 
+                             y=as.factor(ct$ct), 
+                             nodesize = 10, # xx[,4:15] accounts for the 11 predictors
                       ntree = 100) 
 # nodesize helps with speed and avoids overfitting | ntree helps again with speed
 
-cq_rf_simple <- randomForest(x=cq[, 4:13], y=as.factor(cq$cq), nodesize = 10, 
+cq_rf_simple <- randomForest(x=cq[,c("prec1", "prec2", "tmin1", 
+                                     "tavg1", "tmax1", "humd2")], 
+                             y=as.factor(cq$cq), 
+                             nodesize = 10, 
                       ntree = 100) 
 # nodesize helps with speed and avoids overfitting | ntree helps again with speed
-aa_rf_simple <- randomForest(x=aa[, 4:13], y=as.factor(aa$aa), nodesize = 10, 
-                      ntree = 100) 
+aa_rf_simple <- randomForest(x=aa[,c("prec1", "prec2", "tmin2", 
+                                     "tavg2", "tmax2", "humd2")], 
+                             y=as.factor(aa$aa), 
+                             nodesize = 10, 
+                      ntree = 100)
 
 ```
 ### variable importance
@@ -199,6 +227,59 @@ randomForest:: varImpPlot(aa_rf)
 randomForest:: varImpPlot(ct_rf_simple)
 randomForest:: varImpPlot(cq_rf_simple)
 randomForest:: varImpPlot(aa_rf_simple)
+```
+### response curves
+```{r}
+### add desiree's function code to do this
+
+```
+
+
+```{r}
+
+# MAPS FOR SHOWING MODEL OUTPUTS
+
+# Convert continuous predictions to binary (suitable/unsuitable)
+# Need to select a threshold
+# Use best performing model (Random Forest based on our AUC)
+# Calculate evaluation metrics across different thresholds
+
+# Need to predict probability for class "1" (presence)
+rf_pred <- predict(env_vars, rf_model, type = "prob", index = 2)
+
+# Random Forest predictions
+rf_test_pred <- extract(rf_pred, test_coords) # will need to adjust the test_coords to fit this case
+
+eval_rf <- evaluate(p = rf_test_pred[test_presence == 1],
+                    a = rf_test_pred[test_presence == 0])
+
+# Find threshold that maximizes sensitivity + specificity
+
+eval_rf@t[which.max(eval_rf@TPR + eval_rf@TNR)]
+quantile(rf_test_pred[test_presence == 1], 0.1, na.rm = TRUE) # Threshold for 10% omission rate
+
+# Use the threshold that maximizes TSS (True Skill Statistic)
+optimal_threshold <- eval_rf@t[which.max(eval_rf@TPR + eval_rf@TNR)]
+
+# Create binary map
+rf_binary <- rf_pred >= optimal_threshold
+
+# Visualize binary prediction
+plot(rf_binary, 
+     main = paste("Binary Habitat Suitability (threshold =", 
+                  round(optimal_threshold, 2), ")"),
+     xlab = "Longitude", ylab = "Latitude",
+     col = c("gray90", "darkgreen"),
+     legend = FALSE)
+points(presence_coords, pch = 20, cex = 0.3, col = "red")
+map("world", add = TRUE)
+legend("bottomright", 
+       legend = c("Unsuitable", "Suitable", "Occurrences"),
+       fill = c("gray90", "darkgreen", NA),
+       pch = c(NA, NA, 20),
+       col = c(NA, NA, "red"),
+       border = c("black", "black", NA))
+
 ```
 #________________
 # below this line is future stuff, so ignore
