@@ -6,25 +6,18 @@ date: "2026-03-23"
 
 loading libraries
 ```{r}
-library(tidyverse)
 library(dplyr)
+library(ENMTools) #Correlation of bioclim data - Pearson
 library(here) # to use here directory to open data files easier
 library(maps)
+library(PresenceAbsence)
+library(randomForest)
 library(raster)
-library(ENMTools) #Correlation of bioclim data - Pearson
-library(usdm) #VIF for correlation 
+library(tidyverse)
 library(terra)
-library(raster)
-library(here)
+library(usdm) #VIF for correlation 
 set.seed(123)
 
-
-
-library(raster)
-library(terra)
-library(randomForest)
-library(rJava)
-library(PresenceAbsence)
 ```
 Reading in data from desiree
 ```{r}
@@ -157,3 +150,51 @@ write.csv(cq, here("Natalie/data_cleaned/cq_df.csv"))
 write.csv(ct, here("Natalie/data_cleaned/ct_df.csv"))
 write.csv(aa, here("Natalie/data_cleaned/aa_df.csv"))
 ```
+
+
+
+
+```{r}
+bioclim_NAdf <-as.data.frame(bioclim_NA) # easier to work with vif format.
+
+#finding bioclim data that is not highly correlated, removing if higher than 0.8 (Menard 2002) (Wang, 2025)
+
+raster.cor.matrix(bioclim_NA, method = "pearson") #chart, ENMTools package
+pearson_image <- raster.cor.plot(bioclim_NA, method = "pearson") #picture form, ENMTools package
+
+#the results from ENMTools shows Bioclim8,
+
+vif(x = bioclim_NAdf) #checks colineraty, goal to have values 5-10
+#vif results show, 8,9,13,15,18,19 being within values,  6, 7 high
+
+vif(x = bioclim_NAdf[c(1:5, 8:19)]) #Removing 6 7 increase greatly. bioclim 1 is the highest value now
+
+vif(x = bioclim_NAdf[c(2:5, 8:10, 12:19)]) # Removing 1, 6, 7, 11
+
+vif(x = bioclim_NAdf[c(2:5, 8:10, 12:19)])
+#vif(x = bioclim_NAdf[c(2:5, 7:10, 12:19)]) # removing 11
+#vif(x = bioclim_NAdf[c(2:5, 8:10, 12:19)]) # Removing 7 additionally
+vif(x = bioclim_NAdf[c(2:5, 8:10, 12:15, 18,19)]) #removing 16
+
+vif(x = bioclim_NAdf[c(2:4, 8:10, 12:15, 18,19)]) #remove 5
+vif(x = bioclim_NAdf[c(2:4, 8:10, 13:15, 18,19)]) #remove 13
+vif(x = bioclim_NAdf[c(2, 4, 8:10, 13:15, 18,19)]) #remove 3
+
+vif(x = bioclim_NAdf[c(2:3, 8:9, 13:15, 18:19)]) 
+#want second opinion on variables, but planning on keeping 2, 3, 8, 9, 13, 14, 15, 18, 19!
+
+```
+
+```{r}
+cov<-cov(cq[,5:19], use = "complete.obs") >:(
+
+as.integer(cq[,5])
+
+test <- str(cq[5:10])
+
+
+```
+
+
+
+

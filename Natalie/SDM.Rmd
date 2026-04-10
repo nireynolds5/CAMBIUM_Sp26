@@ -18,7 +18,7 @@ library(biomod2)
 library(gstat)
 library(leaflet)
 
-library(adehabitatHS) #PCA, page 161
+library(adehabitatHS) #PCA, page 161, ENFA
 library(pROC)
 
 
@@ -90,6 +90,15 @@ GLM - cq
 glm_model_cq2_h20 <- glm(cq ~ NDVI+ MNDWI+
                                  tavg2+ tmin2+ tmax2+
                                  prec2+ humd2, data = train_data, family = binomial(link = "logit"))
+
+
+#saveRDS(glm_model_cq2_h20, file = "glm_model_cq2_h20.rds")
+
+
+
+
+
+
 
 glm_model_cq1_h2o <- glm(cq ~ NDVI+ MNDWI+
                                  tavg1+ tmin1+ tmax1+
