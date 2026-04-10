@@ -1,0 +1,36 @@
+#This will create a data table rp that can be plugged directly into the ggplot code from the book
+
+#helper function, run first
+col.mean<-function(i,dat){
+  dat[,i]<-mean(dat[,i])
+  i<-i+1
+  if (i<ncol(dat)) col.mean(i,dat)
+  else (return(dat))
+}
+
+#create an empty data frame for rbinding
+rp <- data.frame()
+
+#first, create a character string containing your model variables, named vars
+#data will be your dataframe used for modeling with all your variables
+for (var in vars) {
+  dat <- data[, vars]        # create new df with only model variables
+  variable <- dat[, var]     # save focal variable values
+  dat[, var] <- NULL         # remove focal variable
+  dat <- col.mean(1, dat)    # set remaining variables to their mean
+  dat[, var] <- variable     # re-add focal variable with original values
+  
+  pred <- data.frame(expl.val = variable, row.names = NULL)
+  pred$pred.val <- predict(mod, dat)
+  pred$pred.name <- var
+  
+  rp <- rbind(rp, pred)
+}
+
+#rpggtheme from the book
+rp.gg.theme <- theme(legend.title = element_blank(), 
+                     axis.text.x = element_text(angle = 90,vjust = 0.5), 
+                     panel.background = element_rect(fill = NA, colour = "gray70"), 
+                     strip.background = element_rect(fill = NA,colour = "gray70"), 
+                     panel.grid.major = element_line(colour =,"grey95"), 
+                     legend.key = element_rect(fill = NA, colour = "gray70"))
