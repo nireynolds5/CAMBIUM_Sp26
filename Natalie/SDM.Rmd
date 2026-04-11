@@ -6,65 +6,49 @@ date: "2026-03-01"
 
 Loading Packages
 ```{r}
-library(tidyverse) #data management
-library(dplyr) # data management
-library(here) # to use here directory to open data files easier
-library(raster)
-library(terra)
-library(randomForest)
-library(rJava)
-library(ggplot2)
-library(biomod2)
-library(gstat)
-library(leaflet)
-
 library(adehabitatHS) #PCA, page 161, ENFA
-library(pROC)
+library(dplyr) #Data management
+library(ggplot2) #graphinh
+library(gstat)
+library(here) # to use here directory to open data files easier
+library(PresenceAbsence)
+library(pROC) #ENFA
+library(randomForest) #RF Model
+library(raster) #Raster working
+library(tidyverse) #Data management
+library(terra) #SDM Package
 
-
+set.seed(123)
 ```
 
 
-Loading in Data
+Loading in Data 
 ```{r}
 
 cq <- read.csv(here("Natalie/data_cleaned/cq_df.csv"))
 ct <- read.csv(here("Natalie/data_cleaned/ct_df.csv"))
-cq<- read.csv(here("Natalie/data_cleaned/cq_df.csv"))
+aa<- read.csv(here("Natalie/data_cleaned/aa_df.csv"))
 
 ```
-
-Making Spatial Rasters for environment data  **Testing to make easier for Maxent?**
-```{r}
-
-cq_vec <- terra :: vect(cq, geom = c("Latitude", "Longitude"), crs = "EPSG:4326") #making a spat_raster
-plot(cq_vec)
-
-template <- terra :: rast( xmin =33.2043, xmax= 33.7987, ymin= -112.573997704, ymax = -111.5837, res = 0.01, crs = "EPSG:4326")
-
-
-
-```
-
 
 Test and train Data frames
 ```{r}
 #splitting into training data --> cq
 train_indices_cq <- sample(1:nrow(cq), size = 0.8 *nrow(cq)) #taking a random sample from cq
-train_data_cq <- cq[train_indices,]
-test_data_cq <- cq[-train_indices,]
+train_data_cq <- cq[train_indices_cq,]
+test_data_cq <- cq[-train_indices_cq,]
 nrow(train_data_cq) 
 nrow(test_data_cq) 
 
-write.csv(train_data, file = here("Natalie/data_cleaned/test_train/train_data_cq.csv"))
-write.csv(test_data, file = here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
+write.csv(train_data_cq, file = here("Natalie/data_cleaned/test_train/train_data_cq.csv"))
+write.csv(test_data_cq, file = here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
 
 
 
 # Ct
-train_indices_ct <- sample(1:nrow(ct), size = 0.8 *nrow(ct)) #taking a random sample from cq
-train_data_ct <- ct[train_indices,]
-test_data_ct <- ct[-train_indices,]
+train_indices_ct <- sample(1:nrow(ct), size = 0.8 *nrow(ct)) #taking a random sample from ct
+train_data_ct <- ct[train_indices_ct,]
+test_data_ct <- ct[-train_indices_ct,]
 nrow(train_data_ct) 
 nrow(test_data_ct) 
 
@@ -73,140 +57,82 @@ write.csv(test_data_ct, file = here("Natalie/data_cleaned/test_train/test_data_c
 
 
 
-#cq
-train_indices_cq <- sample(1:nrow(cq), size = 0.8 *nrow(ct)) #taking a random sample from cq
-train_data_ct <- ct[train_indices,]
-test_data_ct <- ct[-train_indices,]
-nrow(train_data_ct) 
-nrow(test_data_ct) 
+#aa
+train_indices_aa <- sample(1:nrow(aa), size = 0.8 *nrow(aa)) #taking a random sample from aa
+train_data_aa <- aa[train_indices_aa,]
+test_data_aa <- aa[-train_indices_aa,]
+nrow(train_data_aa) 
+nrow(test_data_aa) 
 
-write.csv(train_data_ct, file = here("Natalie/data_cleaned/test_train/train_data_ct.csv"))
-write.csv(test_data_ct, file = here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
+write.csv(train_data_aa, file = here("Natalie/data_cleaned/test_train/train_data_aa.csv"))
+write.csv(test_data_aa, file = here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
 ```
 
 
 GLM - cq
 ```{r}
-glm_model_cq2_h20 <- glm(cq ~ NDVI+ MNDWI+
-                                 tavg2+ tmin2+ tmax2+
-                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
+glm_model_cq_h20 <- glm(cq ~ 
+                        NDVI+ MNDWI + prec1 + prec2 + tmin1 + tavg1 + tmax1 + humd2, 
+                        data = train_data_cq, family = binomial(link = "logit"))
 
 
-#saveRDS(glm_model_cq2_h20, file = "glm_model_cq2_h20.rds")
+#saveRDS(glm_model_cq_h20, file = here("Natalie/data_cleaned/models/glm_model_cq_h20.rds"))
 
 
+glm_model_cq <- glm(cq ~ prec1 + prec2 + tmin1 + tavg1 + tmax1 + humd2, 
+                    data = train_data_cq, family = binomial(link = "logit"))
 
-
-
-
-
-glm_model_cq1_h2o <- glm(cq ~ NDVI+ MNDWI+
-                                 tavg1+ tmin1+ tmax1+
-                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
-
-
-glm_model_cq2 <- glm(cq ~ tavg2+ tmin2+ tmax2+
-                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
-
-
-glm_model_cq1 <- glm(cq ~ tavg1+ tmin1+ tmax1+
-                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
-
-
+#saveRDS(glm_model_cq, file = here("Natalie/data_cleaned/models/glm_model_cq.rds"))
 ```
-
-
-GLM Cq Predict
-```{r}
-#glm_model_cq2_h20
-
-cq$glm_cq2_h2o_predict <- predict(glm_model_cq2_h20, cq) #negative?
-
-
-cq_map_2H2o <- leaflet() %>% 
-  addProviderTiles(providers$Esri)%>%
-    addCircleMarkers(data = test, ~Longitude, ~Latitude, radius = 1, color= cq$glm_cq2_h2o_predict)
-
-test <- cq %>% filter(
-  YW == "YW202128"
-)
-
-
-cq_map_2H2o
-  
-  
-mosquito_map <- leaflet() %>% 
-  addProviderTiles(providers$Esri) %>% 
-  addCircleMarkers(data = mosquito_reduced, ~Longitude, ~Latitude, radius = 1)
-
-
-
-```
-
-
 
 
 GLM ct
-
 ```{r}
-glm_model_ct2_h20 <- glm(ct ~ NDVI+ MNDWI+
-                                 tavg2+ tmin2+ tmax2+
-                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
+glm_model_ct_h20 <- glm(ct ~ 
+                        NDVI+ MNDWI+ prec1 + prec2 + tmin1 + tavg1+ tmax1+ humd2, 
+                        data = train_data_ct, family = binomial(link = "logit"))
 
-glm_model_ct1_h2o <- glm(ct ~ NDVI+ MNDWI+
-                                 tavg1+ tmin1+ tmax1+
-                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
-
-glm_model_ct2 <- glm(ct ~ tavg2+ tmin2+ tmax2+
-                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
+glm_model_ct<- glm(ct ~ 
+                        prec1 + prec2 + tmin1 + tavg1+ tmax1+ humd2, 
+                        data = train_data_ct,, family = binomial(link = "logit"))
 
 
-glm_model_ct1 <- glm(ct ~ tavg1+ tmin1+ tmax1+
-                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
+#saveRDS(glm_model_ct_h20, file = here("Natalie/data_cleaned/models/glm_model_ct_h20.rds"))
+#saveRDS(glm_model_ct, file = here("Natalie/data_cleaned/models/glm_model_ct.rds"))
 
 
 ```
 
 
-GLM cq **aa**
+GLM aa
 ```{r}
-glm_model_cq2_h20 <- glm(cq ~ NDVI+ MNDWI+
-                                 tavg2+ tmin2+ tmax2+
-                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
+glm_model_aa_h20 <- glm(aa~ 
+                          NDVI+ MNDWI+ prec1+ prec2+ tmin2+ tavg2+ humd2+ tmax2, 
+                          data = train_data_aa, family = binomial(link = "logit"))
 
-glm_model_cq1_h2o <- glm(cq ~ NDVI+ MNDWI+
-                                 tavg1+ tmin1+ tmax1+
-                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
+glm_model_aa <- glm(aa ~ 
+                      prec1+ prec2+ tmin2+ tavg2+ humd2+ tmax2, 
+                      data = train_data_aa, family = binomial(link = "logit"))
 
-glm_model_cq2 <- glm(cq ~ tavg2+ tmin2+ tmax2+
-                                 prec2+ humd2, data = train_data, family = binomial(link = "logit"))
-
-
-glm_model_cq1 <- glm(cq ~ tavg1+ tmin1+ tmax1+
-                                 prec1+ humd1, data = train_data, family = binomial(link = "logit"))
-
+saveRDS(glm_model_aa_h20, file = here("Natalie/data_cleaned/models/glm_model_aa_h20.rds"))
+saveRDS(glm_model_aa, file = here("Natalie/data_cleaned/models/glm_model_aa.rds"))
 
 ```
-
 
 
 RF-cq
 ```{r}
 
-rf_model_cq1_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
-                       "tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
+rf_model_cq_h2o <- randomForest(x = train_data_cq[, c("NDVI", "MNDWI", "prec1", "prec2", "tmin1", 
+                                                      "tavg1", "tmax1", "humd2")],
+                                 y=as.factor(train_data_cq$cq), nodesize = 10, ntree = 100)
 
-varImpPlot(rf_model_cq1_h2o)
+rf_model_cq <- randomForest(x = train_data_cq[, c("prec1", "prec2", "tmin1", "tavg1", 
+                                                    "tmax1", "humd2")],
+                                 y=as.factor(train_data_cq$cq), nodesize = 10, ntree = 100)
 
-rf_model_cq2_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
-                      "tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_cq2_h2o)
-
-rf_model_cq1 <- randomForest(x = train_data[, c("tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_cq1)
-
-rf_model_cq2 <- randomForest(x = train_data[, c("tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_cq2)
+saveRDS(rf_model_cq_h2o, file = here("Natalie/data_cleaned/models/rf_model_cq_h2o.rds"))
+saveRDS(rf_model_cq, file = here("Natalie/data_cleaned/models/rf_model_cq.rds"))
 
 
 ```
@@ -214,44 +140,222 @@ varImpPlot(rf_model_cq2)
 
 RF -ct
 ```{r}
-rf_model_ct1_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
-                       "tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$ct), nodesize = 10, ntree = 100)
+rf_model_ct_h2o <- randomForest(x = train_data_ct[, c( "NDVI", "MNDWI", "prec1", "prec2", "tmin1", 
+                                                       "tavg1","tmax1", "humd2")], 
+                                y=as.factor(train_data_ct$ct), nodesize = 10, ntree = 100)
 
-varImpPlot(rf_model_ct1_h2o)
+rf_model_ct <- randomForest(x = train_data_ct[, c("prec1", "prec2", "tmin1", 
+                                                       "tavg1","tmax1", "humd2")], 
+                                y=as.factor(train_data_ct$ct), nodesize = 10, ntree = 100)
 
-rf_model_ct2_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
-                      "tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$ct), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_ct2_h2o)
-
-rf_model_ct1 <- randomForest(x = train_data[, c("tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$ct), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_ct1)
-
-rf_model_ct2 <- randomForest(x = train_data[, c("tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$ct), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_ct2)
-
+saveRDS(rf_model_ct_h2o, file = here("Natalie/data_cleaned/models/rf_model_ct_h2o.rds"))
+saveRDS(rf_model_ct, file = here("Natalie/data_cleaned/models/rf_model_ct.rds"))
 
 ```
 
 
-rf - cq
+RF - aa
 ```{r}
-rf_model_cq1_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
-                       "tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
+rf_model_aa_h2o <- randomForest(x = train_data_aa[, c("NDVI", "MNDWI", "prec1", "prec2", "tmin2", 
+                                                      "tavg2","humd2", "tmax2")],  
+                                  y=as.factor(train_data_aa$aa), nodesize = 10, ntree = 100)
 
-varImpPlot(rf_model_cq1_h2o)
+rf_model_aa <- randomForest(x = train_data_aa[, c("prec1", "prec2", "tmin2","tavg2","humd2", 
+                                                  "tmax2")], 
+                                      y=as.factor(train_data_aa$aa), nodesize = 10, ntree = 100)
 
-rf_model_cq2_h2o <- randomForest(x = train_data[, c("NDVI","MNDWI",
-                      "tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_cq2_h2o)
-
-rf_model_cq1 <- randomForest(x = train_data[, c("tavg1","tmin1", "tmax1", "prec1", "humd1")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_cq1)
-
-rf_model_cq2 <- randomForest(x = train_data[, c("tavg2","tmin2", "tmax2", "prec2", "humd2")], y=as.factor(train_data$cq), nodesize = 10, ntree = 100)
-varImpPlot(rf_model_cq2)
-
+saveRDS(rf_model_aa_h2o, file = here("Natalie/data_cleaned/models/rf_model_aa_h2o.rds"))
+saveRDS(rf_model_aa, file = here("Natalie/data_cleaned/models/rf_model_aa.rds"))
 
 ```
+
+
+ENFA - cq
+```{r}
+pc_cq_h2o <- dudi.pca(train_data_cq[, c("NDVI", "MNDWI", "prec1", "prec2", "tmin1", 
+                                        "tavg1", "tmax1", "humd2")], 
+                                      scannf = FALSE, nf =2)
+ENFA_cq_h2o <- enfa(pc_cq_h2o, train_data_cq$cq, scan = FALSE)
+
+
+pc_cq <- dudi.pca(train_data_cq[, c("prec1", "prec2", "tmin1", "tavg1", "tmax1", "humd2")], 
+                                      scannf = FALSE, nf =2)
+ENFA_cq <- enfa(pc_cq, train_data_cq$cq, scan = FALSE)
+
+saveRDS(ENFA_cq_h2o, file = here("Natalie/data_cleaned/models/ENFA_cq_h2o.rds"))
+saveRDS(ENFA_cq, file = here("Natalie/data_cleaned/models/ENFA_cq.rds"))
+
+```
+
+
+
+ENFA - ct
+```{r}
+
+pc_ct_h2o <- dudi.pca(train_data_ct[, c("NDVI", "MNDWI", "prec1", "prec2", "tmin1", 
+                                                       "tavg1","tmax1", "humd2")], 
+                                      scannf = FALSE, nf =2)
+ENFA_ct_h2o <- enfa(pc_ct_h2o, train_data_ct$ct, scan = FALSE)
+
+
+pc_ct <- dudi.pca(train_data_ct[, c("prec1", "prec2", "tmin1","tavg1","tmax1", "humd2")], 
+                                      scannf = FALSE, nf =2)
+ENFA_ct <- enfa(pc_ct, train_data_ct$ct, scan = FALSE)
+
+saveRDS(ENFA_ct_h2o, file = here("Natalie/data_cleaned/models/ENFA_ct_h2o.rds"))
+saveRDS(ENFA_ct, file = here("Natalie/data_cleaned/models/ENFA_ct.rds"))
+
+```
+
+
+
+ENFA - aa
+```{r}
+
+pc_aa_h2o <- dudi.pca(train_data_aa[, c("NDVI", "MNDWI", "prec1", "prec2", "tmin2", 
+                                                      "tavg2","humd2", "tmax2")], 
+                                      scannf = FALSE, nf =2)
+ENFA_aa_h2o <- enfa(pc_aa_h2o, train_data_aa$aa, scan = FALSE)
+
+
+pc_aa <- dudi.pca(train_data_aa[, c("prec1", "prec2", "tmin2", "tavg2","humd2", "tmax2")], 
+                                      scannf = FALSE, nf =2)
+ENFA_aa <- enfa(pc_aa, train_data_aa$aa, scan = FALSE)
+
+saveRDS(ENFA_aa_h2o, file = here("Natalie/data_cleaned/models/ENFA_aa_h2o.rds"))
+saveRDS(ENFA_aa, file = here("Natalie/data_cleaned/models/ENFA_aa.rds"))
+
+```
+
+
+Loading in Weather Tiffs
+```{r}
+#YW201319
+humd1_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/humd1.tif")
+humd2_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/humd2.tif")
+prec1_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/prec1.tif")
+prec2_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/prec2.tif")
+tavg1_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tavg1.tif")
+tavg2_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tavg2.tif")
+tmax1_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tmax1.tif")
+tmax2_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tmax2.tif")
+tmin1_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tmin1.tif")
+tmin2_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tmin2.tif")
+
+
+#YW201332
+humd1_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/humd1.tif")
+humd2_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/humd2.tif")
+prec1_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/prec1.tif")
+prec2_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/prec2.tif")
+tavg1_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/tavg1.tif")
+tavg2_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/tavg2.tif")
+tmax1_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/tmax1.tif")
+tmax2_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/tmax2.tif")
+tmin1_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/tmin1.tif")
+tmin2_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/tmin2.tif")
+
+
+#YW201345
+humd1_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/humd1.tif")
+humd2_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/humd2.tif")
+prec1_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/prec1.tif")
+prec2_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/prec2.tif")
+tavg1_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tavg1.tif")
+tavg2_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tavg2.tif")
+tmax1_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tmax1.tif")
+tmax2_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tmax2.tif")
+tmin1_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tmin1.tif")
+tmin2_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tmin2.tif")
+
+
+#YW201719
+humd1_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/humd1.tif")
+humd2_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/humd2.tif")
+prec1_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/prec1.tif")
+prec2_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/prec2.tif")
+tavg1_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/tavg1.tif")
+tavg2_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/tavg2.tif")
+tmax1_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/tmax1.tif")
+tmax2_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/tmax2.tif")
+tmin1_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/tmin1.tif")
+tmin2_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/tmin2.tif")
+
+
+#YW201732
+humd1_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/humd1.tif")
+humd2_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/humd2.tif")
+prec1_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/prec1.tif")
+prec2_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/prec2.tif")
+tavg1_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tavg1.tif")
+tavg2_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tavg2.tif")
+tmax1_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tmax1.tif")
+tmax2_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tmax2.tif")
+tmin1_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tmin1.tif")
+tmin2_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tmin2.tif")
+
+
+#YW201745
+humd1_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/humd1.tif")
+humd2_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/humd2.tif")
+prec1_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/prec1.tif")
+prec2_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/prec2.tif")
+tavg1_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tavg1.tif")
+tavg2_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tavg2.tif")
+tmax1_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tmax1.tif")
+tmax2_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tmax2.tif")
+tmin1_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tmin1.tif")
+tmin2_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tmin2.tif")
+
+
+#YW202119
+humd1_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/humd1.tif")
+humd2_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/humd2.tif")
+prec1_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/prec1.tif")
+prec2_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/prec2.tif")
+tavg1_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tavg1.tif")
+tavg2_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tavg2.tif")
+tmax1_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tmax1.tif")
+tmax2_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tmax2.tif")
+tmin1_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tmin1.tif")
+tmin2_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tmin2.tif")
+
+
+#YW202132
+humd1_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/humd1.tif")
+humd2_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/humd2.tif")
+prec1_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/prec1.tif")
+prec2_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/prec2.tif")
+tavg1_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tavg1.tif")
+tavg2_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tavg2.tif")
+tmax1_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tmax1.tif")
+tmax2_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tmax2.tif")
+tmin1_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tmin1.tif")
+tmin2_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tmin2.tif")
+
+
+#YW202145
+humd1_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/humd1.tif")
+humd2_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/humd2.tif")
+prec1_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/prec1.tif")
+prec2_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/prec2.tif")
+tavg1_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tavg1.tif")
+tavg2_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tavg2.tif")
+tmax1_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tmax1.tif")
+tmax2_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tmax2.tif")
+tmin1_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tmin1.tif")
+tmin2_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tmin2.tif")
+
+
+
+#Creaing weather raster per year
+
+```
+
+
+
+
+
 
 
 Calculating AUC **NEED PREDCIT?? help me :(**
@@ -292,79 +396,6 @@ rownames(auc_results) <-c("GLM", "Rf", "Maxent")
 
 ```
 
-
-Random Forest Model **Code from previous SDM calc**
-```{r}
-#data prep
-
-train_data$presence_factor <- as.factor(train_data$presence) #changes the data into factors 
-
-rf_model <- randomForest(presence_factor ~ Mean_Temp_of_Wettest_Quarter + Isothermality + Mean_Temp_of_Wettest_Quarter + Mean_temp_of_Driest_quarter + Precipitation_of_wettest_Month + Precipitation_of_driest_month + Precipitation_Seasonality + Precipitation_of_Warmest_Quarter + Precipitation_of_coldest_Quart, data = train_data, ntree = 1000, importance = TRUE, na.action = na.omit) #thinks that there are na present, but there is none? confused. adding na.action = na.omit fixes the problem though
-
-print(rf_model)
-
-#variable importance
-print(importance(rf_model)) #need to figure out what this means exactly number wise
-varImpPlot(rf_model, main = "Random Forest: Bio Variable Importance")
-
-#predict across study area
-rf_pred <- predict(env_vars, rf_model, type = "prob", index = 2) #WHAT DOES TYPE AND INDEX MEAN?
-#rf_test <- predict(rf_model_test, type = "prob", index =2 ) # how it is done in book, 
-
-plot(rf_pred, main = "RF Model Probability: Amsinkia intermedia", xlab = "lon", ylab = "lat") 
-points(lon_lat, pch =10, col = "red", cex =0.5)
-
-
-save(rf_pred, file =here("Data_Analysis/Random_Forest/rf_pred_sp45.Rdata"))
-
-```
-
-
-
-Maxent Model **Code from previous work**
-```{r}
-maxent_path <- system.file("java", package="dismo")
-maxent_path
-
-#if file is telling maxent where the files are located
-
-lon_lat_maxent <- presence_df[c("lon", "lat")]
-
-if (file.exists(paste0(maxent_path, "/maxent.jar"))) {
-  
-prescence_matrix <- as.data.frame(lon_lat_maxent)
-
-#convert spat raster to raster stack
-env_vars_raster <- stack(env_vars)
-
-#building maxent model
-maxent_model <- maxent(env_vars_raster, prescence_matrix)
-print(maxent_model)
-
-#Predict the distribution
-
-maxent_pred <- predict(maxent_model, env_vars_raster)
-
-#Visuzalize prediction
-plot(maxent_pred, main = "Maxent: Habitat Suitability - Amsinckia intermedia", xlab = "lon", ylab = "lat",)
- 
-#response curves
-response(maxent_model
-         )
-
-} else {
-  cat("MaxEnt not available (requires maxent.jar)\n")
-  cat("To use MaxEnt:\n")
-  cat("1. Download maxent.jar from: https://biodiversityinformatics.amnh.org/open_source/maxent/\n")
-  cat("2. Place it in:", maxent_path, "\n")
-  cat("3. Restart R\n\n")
-  cat("Skipping MaxEnt for this exercise...\n")
-  maxent_pred <- NULL}
-
-
-save(maxent_pred, file =here("Data_Analysis/Maxent/maxent_pred_sp45.Rdata"))
-
-```
 
 
 
