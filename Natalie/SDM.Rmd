@@ -230,6 +230,8 @@ saveRDS(ENFA_aa, file = here("Natalie/data_cleaned/models/ENFA_aa.rds"))
 
 Loading in Weather Tiffs
 ```{r}
+maricopa <- extent(-112.573997704, -111.5837, 33.2043, 33.7987)
+
 #YW201319
 humd1_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/humd1.tif")
 humd2_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/humd2.tif")
@@ -242,6 +244,13 @@ tmax2_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tmax2.tif")
 tmin1_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tmin1.tif")
 tmin2_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tmin2.tif")
 
+#making one raster for this year
+YW201319_list <-c(humd1_yw201319, humd2_yw201319, prec1_yw201319, prec2_yw201319, tavg1_yw201319,tavg2_yw201319,tmax1_yw201319, tmax2_yw201319, tmin1_yw201319,tmin2_yw201319)
+YW201319_rast <-stack(YW201319_list)
+
+YW201319_rast <- crop(YW201319_rast, maricopa)
+#plot(YW201319_rast)
+writeRaster(YW201319_rast, here("Natalie/data_cleaned/Env_raster/YW201319_rast.tiff"))
 
 #YW201332
 humd1_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/humd1.tif")
@@ -256,6 +265,15 @@ tmin1_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/tmin1.tif")
 tmin2_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/tmin2.tif")
 
 
+#making one raster for this year
+yw201332_list <-c(humd1_yw201332, humd2_yw201332, prec1_yw201332, prec2_yw201332, tavg1_yw201332,tavg2_yw201332,tmax1_yw201332, tmax2_yw201332, tmin1_yw201332,tmin2_yw201332)
+yw201332_rast <-stack(yw201332_list)
+
+yw201332_rast <- crop(yw201332_rast, maricopa)
+#plot(YW201332_rast)
+writeRaster(yw201332_rast, here("Natalie/data_cleaned/Env_raster/YW201332_rast.tiff"))
+
+
 #YW201345
 humd1_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/humd1.tif")
 humd2_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/humd2.tif")
@@ -267,6 +285,14 @@ tmax1_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tmax1.tif")
 tmax2_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tmax2.tif")
 tmin1_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tmin1.tif")
 tmin2_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tmin2.tif")
+
+#making one raster for this year
+yw201345_list <-c(humd1_yw201345, humd2_yw201345, prec1_yw201345, prec2_yw201345, tavg1_yw201345,tavg2_yw201345,tmax1_yw201345, tmax2_yw201345, tmin1_yw201345,tmin2_yw201345)
+yw201345_rast <-stack(yw201345_list)
+
+yw201345_rast <- crop(yw201345_rast, maricopa)
+#plot(YW201345_rast)
+writeRaster(yw201345_rast, here("Natalie/data_cleaned/Env_raster/YW201345_rast.tiff"))
 
 
 #YW201719
@@ -282,6 +308,15 @@ tmin1_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/tmin1.tif")
 tmin2_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/tmin2.tif")
 
 
+#making one raster for this year
+yw201719_list <-c(humd1_yw201719, humd2_yw201719, prec1_yw201719, prec2_yw201719, tavg1_yw201719,tavg2_yw201719,tmax1_yw201719, tmax2_yw201719, tmin1_yw201719,tmin2_yw201719)
+yw201719_rast <-stack(yw201719_list)
+
+yw201719_rast <- crop(yw201719_rast, maricopa)
+#plot(YW201719_rast)
+writeRaster(yw201719_rast, here("Natalie/data_cleaned/Env_raster/YW201719_rast.tiff"))
+
+
 #YW201732
 humd1_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/humd1.tif")
 humd2_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/humd2.tif")
@@ -293,6 +328,14 @@ tmax1_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tmax1.tif")
 tmax2_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tmax2.tif")
 tmin1_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tmin1.tif")
 tmin2_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tmin2.tif")
+
+#making one raster for this year
+yw201732_list <-c(humd1_yw201732, humd2_yw201732, prec1_yw201732, prec2_yw201732, tavg1_yw201732,tavg2_yw201732,tmax1_yw201732, tmax2_yw201732, tmin1_yw201732,tmin2_yw201732)
+yw201732_rast <-stack(yw201732_list)
+
+yw201732_rast <- crop(yw201732_rast, maricopa)
+#plot(YW201732_rast)
+writeRaster(yw201732_rast, here("Natalie/data_cleaned/Env_raster/YW201732_rast.tiff"))
 
 
 #YW201745
@@ -307,6 +350,14 @@ tmax2_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tmax2.tif")
 tmin1_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tmin1.tif")
 tmin2_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tmin2.tif")
 
+#making one raster for this year
+yw201745_list <-c(humd1_yw201745, humd2_yw201745, prec1_yw201745, prec2_yw201745, tavg1_yw201745,tavg2_yw201745,tmax1_yw201745, tmax2_yw201745, tmin1_yw201745,tmin2_yw201745)
+yw201745_rast <-stack(yw201745_list)
+
+yw201745_rast <- crop(yw201745_rast, maricopa)
+#plot(YW201745_rast)
+writeRaster(yw201745_rast, here("Natalie/data_cleaned/Env_raster/YW201745_rast.tiff"))
+
 
 #YW202119
 humd1_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/humd1.tif")
@@ -319,6 +370,15 @@ tmax1_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tmax1.tif")
 tmax2_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tmax2.tif")
 tmin1_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tmin1.tif")
 tmin2_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tmin2.tif")
+
+#making one raster for this year
+yw202119_list <-c(humd1_yw202119, humd2_yw202119, prec1_yw202119, prec2_yw202119, tavg1_yw202119,tavg2_yw202119,tmax1_yw202119, tmax2_yw202119, tmin1_yw202119,tmin2_yw202119)
+yw202119_rast <-stack(yw202119_list)
+
+yw202119_rast <- crop(yw202119_rast, maricopa)
+#plot(YW202119_rast)
+writeRaster(yw202119_rast, here("Natalie/data_cleaned/Env_raster/YW202119_rast.tiff"))
+
 
 
 #YW202132
@@ -333,6 +393,14 @@ tmax2_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tmax2.tif")
 tmin1_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tmin1.tif")
 tmin2_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tmin2.tif")
 
+#making one raster for this year
+yw202132_list <-c(humd1_yw202132, humd2_yw202132, prec1_yw202132, prec2_yw202132, tavg1_yw202132,tavg2_yw202132,tmax1_yw202132, tmax2_yw202132, tmin1_yw202132,tmin2_yw202132)
+yw202132_rast <-stack(yw202132_list)
+
+yw202132_rast <- crop(yw202132_rast, maricopa)
+#plot(YW202132_rast)
+writeRaster(yw202132_rast, here("Natalie/data_cleaned/Env_raster/YW202132_rast.tiff"))
+
 
 #YW202145
 humd1_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/humd1.tif")
@@ -346,12 +414,27 @@ tmax2_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tmax2.tif")
 tmin1_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tmin1.tif")
 tmin2_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tmin2.tif")
 
+#Making year raster
+yw202145_list <-c(humd1_yw202145, humd2_yw202145, prec1_yw202145, prec2_yw202145, tavg1_yw202145,tavg2_yw202145,tmax1_yw202145, tmax2_yw202145, tmin1_yw202145,tmin2_yw202145)
+yw202145_rast <-stack(yw202145_list)
 
-
-#Creaing weather raster per year
-
+yw202145_rast <- crop(yw202145_rast, maricopa)
+#plot(YW202145_rast)
+writeRaster(yw202145_rast, here("Natalie/data_cleaned/Env_raster/YW202145_rast.tiff"))
 ```
 
+
+cq-Prediction: prec1, prec2, tmin1, tavg1, tmax1, humd2
+
+```{r}
+cq201319_subset <- c("humd2", "prec1", "prec2", "tavg1","tmax1", "tmin1")
+yw201319_cq <- subset(YW201319_rast, cq201319_subset)
+
+plot(yw201319_cq)
+
+cq201319_glm <- predict(yw201319_cq,glm_model_cq)
+plot(cq201319_glm)
+```
 
 
 
