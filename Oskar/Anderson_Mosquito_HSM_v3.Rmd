@@ -1,0 +1,247 @@
+---
+title: "NJD_Mosquito_HSM"
+author: "Oskar Anderson, modified from Nick Dabagia's work on 2026-02-24"
+date: "2026-03-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# functions
+```{r}
+library(tidyverse)
+library(lubridate)
+library(randomForest)   # Random Forest algorithm
+library(dismo)          # Core SDM functions
+library(raster)         # Spatial data handling
+library(sp)             # Spatial data classes
+library(biomod2)
+```
+# read in data
+```{r}
+setwd("C:/Users/oskar/OneDrive/Documents/University_of_Arizona/University_of_Arizona-Spring_2026/RNR_ 497-Advanced_Topics_in_Natural_Resources_Conservation/dataset_and_code")
+mosquito_data <- read.csv("mosquito_final_weather.csv", row.names=1)
+
+```
+
+
+```{r}
+#Use na.rm = TRUE to filter them out
+mosquito_data %>% 
+  group_by(Species) %>% 
+  summarize(Males = sum(Males, na.rm = TRUE), Females = sum(Females, na.rm = TRUE))
+# currently this doesn't change the number of observations at all, but I left
+# it in as part of Nick's code
+
+# FILTER OUT ALL MOSQS THAT AREN'T CULEX OR AEDES
+
+species_int <- mosquito_data |>
+  filter(Species == "Aedes aegypti" | 
+           Species == "Culex tarsalis"|
+           Species == "Culex quinquefasciatus")
+
+# add a week column to 1-52 mosquito dataset
+#species_int <- species_int %>%
+#  mutate(
+#    Date = as.Date(Date),
+#    Week = isoweek(Date)
+#  ) %>%
+#  relocate(Week, .after = 1)
+# this already got done when Desiree gave us the updated dataset
+
+# make a bounding box to filter the observations to bounded box for Maricopa county/metro phoenix
+# West: -112.573997704 North: 33.7987N East: -111.5837 South: 33.2043
+#maricopa_obs <- species_int |>
+#  filter(Latitude >= 33.2043 & Latitude <= 33.7987,
+#         Longitude <= -111.5837 & Longitude  >=  -112.573997704
+#)
+# this has also already been done.
+
+sum(is.na(species_int$Males))
+sum(is.na(species_int$Females))
+
+# add a column for overall presence / absence
+mosquito_final <- species_int %>% 
+mutate(
+  Presence = ifelse(Males ==0 & Females == 0, 0, 1)
+)
+
+```
+
+# Add in environmental variables here
+
+```{r}
+# add the environmental variables from provided TIF files
+library(raster)
+
+NDVI <- raster("NDVI.tif")
+MNDWI <- raster("MNDWI.tif")
+
+lonlat_df <- data.frame(
+  Longitude = mosquito_final$Longitude,
+  Latitude = mosquito_final$Latitude
+)
+
+mosquito_final$NDVI <- raster::extract(NDVI, lonlat_df)
+mosquito_final$MNDWI <- raster::extract(MNDWI, lonlat_df)
+
+plot(x = mosquito_final$Longitude, y = mosquito_final$Latitude, data = mosquito_final$NDVI)
+plot(x = mosquito_final$Longitude, y = mosquito_final$Latitude, data = mosquito_final$MNDWI)
+#these are crappy maps, but it shows some idea of where the sampling points are
+#note to self to make better ones later in leaflet
+
+```
+
+```{r}
+
+# Separate species and equalize presence/absence counts as shown in class on 2026-03-23
+
+mosquito_final$cq <- NA
+mosquito_final$ct <- NA
+mosquito_final$aa <- NA
+mosquito_final$count <- mosquito_final$Males + mosquito_final$Females
+
+mosquito_final$cq <- as.integer(mosquito_final$Species=="Culex quinquefasciatus" & mosquito_final$count > 0)
+mosquito_final$ct <- as.integer(mosquito_final$Species=="Culex tarsalis" & mosquito_final$count > 0)
+mosquito_final$aa <- as.integer(mosquito_final$Species=="Aedes aegypti" & mosquito_final$count > 0)
+
+mosq_new <- mosquito_final %>% 
+  group_by(NDVI, MNDWI, YW, tavg1, tavg2, tmin1, tmin2, tmax1, tmax2, prec1, prec2, humd1, humd2, Latitude, Longitude) %>% 
+  summarise(cq = max(cq), ct = max(ct), aa = max(aa))
+
+    
+mosq_new <-  na.omit(mosq_new)
+
+#Included lat and lon in the code above because I want to use them later for 
+#biomod2 modeling. This is a divergence from what we discussed in class and may
+#cause issues.
+
+sum(mosq_new$cq)
+
+cq0 <- subset(mosq_new, cq == 0)
+ct0 <- subset(mosq_new, ct == 0)
+aa0 <- subset(mosq_new, aa == 0)
+
+cq1 <- subset(mosq_new, cq == 1)
+ct1 <- subset(mosq_new, ct == 1)
+aa1 <- subset(mosq_new, aa == 1)
+
+# cq0_samp <- cq0[sample(nrow(cq0), nrow(cq1), replace = FALSE),]
+#might need to switch 0s and 1s in this subsample to get this worked out (number disparity)
+
+cq1_samp <- cq1[sample(nrow(cq1), nrow(cq0), replace = FALSE),]
+ct0_samp <- ct0[sample(nrow(ct0), nrow(ct1), replace = FALSE),]
+aa0_samp <- aa0[sample(nrow(aa0), nrow(aa1), replace = FALSE),]
+
+cq <- rbind(cq0, cq1_samp)
+nrow(cq) / nrow(cq1_samp)
+# it's 2, GOOD !
+ct <- rbind(ct1, ct0_samp)
+aa <- rbind(aa1, aa0_samp)
+
+# save the data as it is here
+write.csv(mosquito_final, "mosquito_oskar.csv")
+write.csv(cq, "mosquito_oskar_cq.csv")
+write.csv(ct, "mosquito_oskar_ct.csv")
+write.csv(aa, "mosquito_oskar_aa.csv")
+
+aa <- read.csv("mosquito_oskar_aa.csv")
+
+```
+
+# MODELING BEGINS HERE
+## for this first pass, all models will first be tested using the Aedes aegypti data
+
+```{r}
+
+# RF
+
+# Create a random forest model using the methodology from in class 2026-03-23
+
+aa <- na.omit(aa)
+
+aa_rf <-  randomForest(x = aa[,c("NDVI", "MNDWI", "tavg1", "tavg2", "tmin1", "tmin2", "tmax1", "tmax2", "prec1", "prec2", "humd1", "humd2")], y=as.factor(aa$aa), nodesize = 10, ntree = 100)
+aa_rf
+
+randomForest:::varImpPlot(aa_rf)
+# multiple times I have run this model, and the temperature at 2 week lag always
+# seems to have high importance
+
+# 2-week data overall seems closer than 1-week
+
+# try to have a response curve
+
+```
+
+```{r}
+
+# GLM
+
+aa_glm <- glm(aa ~ 1 + NDVI + MNDWI + tavg1 + tavg2 + tmin1 +tmin2 + tmax1 + tmax2 + prec1 + prec2 + humd1 + humd2, data = aa, family = "binomial") 
+# Code from my peers uses 
+# family = binomial(link = "logit")
+# which I think is the default for binomial family (according to documentation I read online)
+
+# I am working to make sure I understand the family better, but I do understand 
+# that binomial is appropriate for presence/absence data
+
+aa_glm
+
+# response curves with ggplot2 (as in textbook p. 168)
+#aa_glm_response <- response.plot2(models = aa_glm, Data = aa[,c(1:2, 4:13)])
+# deprecated function. new function wants a BIOMOD.models.out object
+
+```
+
+```{r}
+
+# BIOMOD2 - try and just do all the types of model in biomod2, since that seems
+# more conducive to working alongside the (slightly outdated) textbook
+
+aa_bm2 <- BIOMOD_FormatingData(
+  resp.var = aa$aa,
+  expl.var = aa[, c("NDVI", "MNDWI", "tavg1", "tavg2", "tmin1", "tmin2", 
+                    "tmax1", "tmax2", "prec1", "prec2", "humd1", "humd2")],
+  resp.xy = aa[, c("Longitude", "Latitude")],
+  resp.name = "Aedes aegypti"
+)
+
+aa_bm2
+
+# set the options for the models in the ensemble
+#aa_options <- BIOMOD_ModelingOptions(
+#  GLM = list(type = 'quadratic', interaction.level = 1) 
+#)
+
+aa_models <- BIOMOD_Modeling(
+  bm.format = aa_bm2,
+  models = c("SRE", "GLM", "RF"), # creating 3 models: SRE (BIOCLIM) is envelope based, GLM is linear, and RF (random forest) is bagging/boosting
+  CV.strategy = "random", # randomized number of cross-validation sets drawn
+  CV.perc = 0.8, # 80% of data for calibration, 20% for validation
+  CV.nb.rep = 2, # draw sets of cross-validation points 2 times
+  CV.do.full.models = F,
+  OPT.strategy = 'bigboss', # bigboss is the biomod2 house strategy for setting parameters. I am still trying to understand exactly what this means
+  metric.eval = c('ACCURACY', 'AUCroc') # how I want to evaluate the models: fraction of correct predictions and AUC of relative operating characteristic
+)
+
+aa_models
+
+# show the values for the evaluation metrics
+get_evaluations(aa_models)
+# show variable importance
+get_variables_importance(aa_models)
+# returns "! models have no variables importance", which I need to understand
+
+bm_PlotEvalMean(bm.out = aa_models, dataset = 'calibration')
+bm_PlotEvalMean(bm.out = aa_models, dataset = 'validation')
+
+# get response curves
+# change show.variables to format for different groupings of response curve by variable
+aa_respcurves <- bm_PlotResponseCurves(bm.out = aa_models,
+                                       show.variables = c("prec1", "prec2", "humd1", "humd2"))
+
+# aa_respcurves$plot # is here if I want to mess with the ggplot2 object 
+
+```
