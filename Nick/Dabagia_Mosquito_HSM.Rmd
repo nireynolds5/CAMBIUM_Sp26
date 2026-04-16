@@ -228,9 +228,79 @@ randomForest:: varImpPlot(ct_rf_simple)
 randomForest:: varImpPlot(cq_rf_simple)
 randomForest:: varImpPlot(aa_rf_simple)
 ```
-### response curves
+
+### Response Curves
 ```{r}
-### add desiree's function code to do this
+
+## data
+# aa
+# ct
+# cq
+#first, create a character string containing your model variables, named vars
+#data will be your dataframe used for modeling with all your variables
+# vars arguments
+aa_vars_simple <- c("prec1", "prec2", "tmin2", "tavg2", "tmax2", "humd2")
+ct_cq_vars_simple <- c("prec1", "prec2", "tmin1", "tavg1", "tmax1", "humd2")
+aa_vars <- c("prec1", "prec2", "tmin2", "tavg2", "tmax2", "humd2", "NDVI", "MNDWI")
+ct_cq_vars <- c("prec1", "prec2", "tmin1", "tavg1", "tmax1", "humd2", "NDVI", "MNDWI")
+
+#This will create a data table rp that can be plugged directly into the ggplot code from the book
+
+#helper function, run first
+col.mean<-function(i,dat){
+   dat[,i]<-mean(dat[,i])
+   i<-i+1
+   if (i<ncol(dat)) col.mean(i,dat)
+   else (return(dat))
+}
+
+rp_fxn <- function(vars, data, mod) {
+  rp <- data.frame()
+  for (var in vars) {
+    dat      <- data[, vars]
+    variable <- dat[, var]
+    dat[, var] <- NULL
+    dat      <- col.mean(var, dat)      # pass var name instead of index
+    dat[, var] <- variable
+
+    pred          <- data.frame(expl.val = variable, row.names = NULL)
+    pred$pred.val <- predict(mod, dat)
+    pred$pred.name <- var
+
+    rp <- rbind(rp, pred)
+  }
+  return(rp)                    
+}
+
+#######################
+# rpggtheme from the book
+rp.gg.theme <- theme(
+  legend.title    = element_blank(),
+  axis.text.x     = element_text(angle = 90, vjust = 0.5),
+  panel.background = element_rect(fill = NA, colour = "gray70"),
+  strip.background = element_rect(fill = NA, colour = "gray70"),
+  panel.grid.major = element_line(colour = "grey95"),
+  legend.key      = element_rect(fill = NA, colour = "gray70")
+)
+
+
+aa_rp_simple <- rp_fxn(vars = aa_vars_simple, data = aa, mod = aa_rf_simple)
+aa_rp <- rp_fxn(vars = aa_vars, data = aa, mod = aa_rf)
+ct_rp_simple <- rp_fxn(vars = ct_cq_vars_simple, data = ct, mod = ct_rf_simple)
+ct_rp <- rp_fxn(vars = ct_cq_vars_simple, data = ct, mod = ct_rf)
+cq_rp_simple <- rp_fxn(vars = ct_cq_vars_simple, data = cq, mod = cq_rf_simple)
+cq_rp <- rp_fxn(vars = ct_cq_vars_simple, data = cq, mod = cq_rf)
+##############################
+# rp is output from the rp_fxn
+# Display the response plot
+gg.rp <- ggplot(rp, aes(x = expl.val, y = pred.val, lty = pred.name)) +
+  geom_line() +
+  ylab("prob of occ") +
+  xlab("") +
+  rp.gg.theme +
+  facet_grid(~ expl.name, scales = "free_x")
+
+print(gg.rp)
 
 ```
 
@@ -447,7 +517,6 @@ plot(rf_pred, main = "Random Forest: Predicted Probability",
      xlab = "Longitude", ylab = "Latitude")
 points(presence_coords, pch = 20, cex = 0.5, col = "red")
 map("world", add = TRUE)
-
 
 ```
 
