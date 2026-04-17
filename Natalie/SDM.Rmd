@@ -643,6 +643,8 @@ ct202145_h2o_glm <- predict(yw202145_ct_h2o, glm_model_ct_h20) #with water
 #writeRaster(ct202119_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct202119_h2o_glm.tif")
 #writeRaster(ct202132_glm , file = "/Users/nooni/Box/RNR597_data/prediction/ct202132_glm.tif")
 #writeRaster(ct202132_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct202132_h2o_glm.tif")
+#writeRaster(ct202145_glm , file = "/Users/nooni/Box/RNR597_data/prediction/ct202145_glm.tif")
+#writeRaster(ct202145_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct202145_h2o_glm.tif")
 
 #**RF**
 
@@ -827,6 +829,8 @@ aa202145_h2o_rf <- predict(yw202145_aa_h2o, rf_model_aa_h20) #with water
 #writeRaster(aa202119_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa202119_h2o_rf.tif")
 #writeRaster(aa202132_rf , file = "/Users/nooni/Box/RNR597_data/prediction/aa202132_rf.tif")
 #writeRaster(aa202132_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa202132_h2o_rf.tif")
+#writeRaster(aa202145_rf , file = "/Users/nooni/Box/RNR597_data/prediction/aa202145_rf.tif")
+#writeRaster(aa202145_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa202145_h2o_rf.tif")
 
 
 ```
