@@ -69,6 +69,14 @@ nrow(test_data_aa)
 ```
 
 
+```{r}
+train_data_cq<-read.csv(here("Natalie/data_cleaned/test_train/train_data_cq.csv"))
+test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
+```
+
+
+
+
 GLM - cq
 ```{r}
 glm_model_cq_h20 <- glm(cq ~ 
@@ -232,6 +240,9 @@ Loading in Weather Tiffs
 ```{r}
 maricopa <- extent(-112.573997704, -111.5837, 33.2043, 33.7987)
 
+#NDVI <- rast("/Users/nooni/Box/RNR597_data/data/NDVI.tif")
+#MNDWI <-rast("/Users/nooni/Box/RNR597_data/data/MNDWI.tif")
+
 #YW201319
 humd1_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/humd1.tif")
 humd2_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/humd2.tif")
@@ -245,12 +256,12 @@ tmin1_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tmin1.tif")
 tmin2_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/tmin2.tif")
 
 #making one raster for this year
-YW201319_list <-c(humd1_yw201319, humd2_yw201319, prec1_yw201319, prec2_yw201319, tavg1_yw201319,tavg2_yw201319,tmax1_yw201319, tmax2_yw201319, tmin1_yw201319,tmin2_yw201319)
+YW201319_list <-c(humd1_yw201319, humd2_yw201319, prec1_yw201319, prec2_yw201319, tavg1_yw201319,tavg2_yw201319,tmax1_yw201319, tmax2_yw201319, tmin1_yw201319,tmin2_yw201319, NDVI, MNDWI)
 YW201319_rast <-stack(YW201319_list)
 
 YW201319_rast <- crop(YW201319_rast, maricopa)
 #plot(YW201319_rast)
-writeRaster(YW201319_rast, here("Natalie/data_cleaned/Env_raster/YW201319_rast.tiff"))
+#writeRaster(YW201319_rast, here("Natalie/data_cleaned/Env_raster/YW201319_rast.tif"), overwrite = TRUE)
 
 #YW201332
 humd1_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/humd1.tif")
@@ -266,12 +277,12 @@ tmin2_yw201332<-rast("/Users/nooni/Box/RNR597_data/data/yw201332/tmin2.tif")
 
 
 #making one raster for this year
-yw201332_list <-c(humd1_yw201332, humd2_yw201332, prec1_yw201332, prec2_yw201332, tavg1_yw201332,tavg2_yw201332,tmax1_yw201332, tmax2_yw201332, tmin1_yw201332,tmin2_yw201332)
+yw201332_list <-c(humd1_yw201332, humd2_yw201332, prec1_yw201332, prec2_yw201332, tavg1_yw201332,tavg2_yw201332,tmax1_yw201332, tmax2_yw201332, tmin1_yw201332,tmin2_yw201332, NDVI, MNDWI)
 yw201332_rast <-stack(yw201332_list)
 
 yw201332_rast <- crop(yw201332_rast, maricopa)
 #plot(YW201332_rast)
-writeRaster(yw201332_rast, here("Natalie/data_cleaned/Env_raster/YW201332_rast.tiff"))
+writeRaster(yw201332_rast, here("Natalie/data_cleaned/Env_raster/YW201332_rast.tiff"), overwrite = TRUE)
 
 
 #YW201345
@@ -287,12 +298,12 @@ tmin1_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tmin1.tif")
 tmin2_yw201345<-rast("/Users/nooni/Box/RNR597_data/data/yw201345/tmin2.tif")
 
 #making one raster for this year
-yw201345_list <-c(humd1_yw201345, humd2_yw201345, prec1_yw201345, prec2_yw201345, tavg1_yw201345,tavg2_yw201345,tmax1_yw201345, tmax2_yw201345, tmin1_yw201345,tmin2_yw201345)
+yw201345_list <-c(humd1_yw201345, humd2_yw201345, prec1_yw201345, prec2_yw201345, tavg1_yw201345,tavg2_yw201345,tmax1_yw201345, tmax2_yw201345, tmin1_yw201345,tmin2_yw201345, NDVI, MNDWI)
 yw201345_rast <-stack(yw201345_list)
 
 yw201345_rast <- crop(yw201345_rast, maricopa)
 #plot(YW201345_rast)
-writeRaster(yw201345_rast, here("Natalie/data_cleaned/Env_raster/YW201345_rast.tiff"))
+#writeRaster(yw201345_rast, here("Natalie/data_cleaned/Env_raster/YW201345_rast.tiff"), overwrite = TRUE)
 
 
 #YW201719
@@ -309,12 +320,12 @@ tmin2_yw201719<-rast("/Users/nooni/Box/RNR597_data/data/yw201719/tmin2.tif")
 
 
 #making one raster for this year
-yw201719_list <-c(humd1_yw201719, humd2_yw201719, prec1_yw201719, prec2_yw201719, tavg1_yw201719,tavg2_yw201719,tmax1_yw201719, tmax2_yw201719, tmin1_yw201719,tmin2_yw201719)
+yw201719_list <-c(humd1_yw201719, humd2_yw201719, prec1_yw201719, prec2_yw201719, tavg1_yw201719,tavg2_yw201719,tmax1_yw201719, tmax2_yw201719, tmin1_yw201719,tmin2_yw201719, NDVI, MNDWI)
 yw201719_rast <-stack(yw201719_list)
 
 yw201719_rast <- crop(yw201719_rast, maricopa)
 #plot(YW201719_rast)
-writeRaster(yw201719_rast, here("Natalie/data_cleaned/Env_raster/YW201719_rast.tiff"))
+#writeRaster(yw201719_rast, here("Natalie/data_cleaned/Env_raster/YW201719_rast.tiff"), overwrite = TRUE)
 
 
 #YW201732
@@ -330,12 +341,12 @@ tmin1_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tmin1.tif")
 tmin2_yw201732<-rast("/Users/nooni/Box/RNR597_data/data/yw201732/tmin2.tif")
 
 #making one raster for this year
-yw201732_list <-c(humd1_yw201732, humd2_yw201732, prec1_yw201732, prec2_yw201732, tavg1_yw201732,tavg2_yw201732,tmax1_yw201732, tmax2_yw201732, tmin1_yw201732,tmin2_yw201732)
+yw201732_list <-c(humd1_yw201732, humd2_yw201732, prec1_yw201732, prec2_yw201732, tavg1_yw201732,tavg2_yw201732,tmax1_yw201732, tmax2_yw201732, tmin1_yw201732,tmin2_yw201732, NDVI, MNDWI)
 yw201732_rast <-stack(yw201732_list)
 
 yw201732_rast <- crop(yw201732_rast, maricopa)
 #plot(YW201732_rast)
-writeRaster(yw201732_rast, here("Natalie/data_cleaned/Env_raster/YW201732_rast.tiff"))
+#writeRaster(yw201732_rast, here("Natalie/data_cleaned/Env_raster/YW201732_rast.tiff"), overwrite = TRUE)
 
 
 #YW201745
@@ -351,12 +362,12 @@ tmin1_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tmin1.tif")
 tmin2_yw201745<-rast("/Users/nooni/Box/RNR597_data/data/yw201745/tmin2.tif")
 
 #making one raster for this year
-yw201745_list <-c(humd1_yw201745, humd2_yw201745, prec1_yw201745, prec2_yw201745, tavg1_yw201745,tavg2_yw201745,tmax1_yw201745, tmax2_yw201745, tmin1_yw201745,tmin2_yw201745)
+yw201745_list <-c(humd1_yw201745, humd2_yw201745, prec1_yw201745, prec2_yw201745, tavg1_yw201745,tavg2_yw201745,tmax1_yw201745, tmax2_yw201745, tmin1_yw201745,tmin2_yw201745, NDVI, MNDWI)
 yw201745_rast <-stack(yw201745_list)
 
 yw201745_rast <- crop(yw201745_rast, maricopa)
 #plot(YW201745_rast)
-writeRaster(yw201745_rast, here("Natalie/data_cleaned/Env_raster/YW201745_rast.tiff"))
+#writeRaster(yw201745_rast, here("Natalie/data_cleaned/Env_raster/YW201745_rast.tiff"), overwrite = TRUE)
 
 
 #YW202119
@@ -372,12 +383,12 @@ tmin1_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tmin1.tif")
 tmin2_yw202119<-rast("/Users/nooni/Box/RNR597_data/data/yw202119/tmin2.tif")
 
 #making one raster for this year
-yw202119_list <-c(humd1_yw202119, humd2_yw202119, prec1_yw202119, prec2_yw202119, tavg1_yw202119,tavg2_yw202119,tmax1_yw202119, tmax2_yw202119, tmin1_yw202119,tmin2_yw202119)
+yw202119_list <-c(humd1_yw202119, humd2_yw202119, prec1_yw202119, prec2_yw202119, tavg1_yw202119,tavg2_yw202119,tmax1_yw202119, tmax2_yw202119, tmin1_yw202119,tmin2_yw202119, NDVI, MNDWI)
 yw202119_rast <-stack(yw202119_list)
 
 yw202119_rast <- crop(yw202119_rast, maricopa)
 #plot(YW202119_rast)
-writeRaster(yw202119_rast, here("Natalie/data_cleaned/Env_raster/YW202119_rast.tiff"))
+#writeRaster(yw202119_rast, here("Natalie/data_cleaned/Env_raster/YW202119_rast.tiff"), overwrite = TRUE)
 
 
 
@@ -394,12 +405,12 @@ tmin1_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tmin1.tif")
 tmin2_yw202132<-rast("/Users/nooni/Box/RNR597_data/data/yw202132/tmin2.tif")
 
 #making one raster for this year
-yw202132_list <-c(humd1_yw202132, humd2_yw202132, prec1_yw202132, prec2_yw202132, tavg1_yw202132,tavg2_yw202132,tmax1_yw202132, tmax2_yw202132, tmin1_yw202132,tmin2_yw202132)
+yw202132_list <-c(humd1_yw202132, humd2_yw202132, prec1_yw202132, prec2_yw202132, tavg1_yw202132,tavg2_yw202132,tmax1_yw202132, tmax2_yw202132, tmin1_yw202132,tmin2_yw202132, NDVI, MNDWI)
 yw202132_rast <-stack(yw202132_list)
 
 yw202132_rast <- crop(yw202132_rast, maricopa)
 #plot(YW202132_rast)
-writeRaster(yw202132_rast, here("Natalie/data_cleaned/Env_raster/YW202132_rast.tiff"))
+#writeRaster(yw202132_rast, here("Natalie/data_cleaned/Env_raster/YW202132_rast.tiff"), overwrite = TRUE)
 
 
 #YW202145
@@ -415,45 +426,409 @@ tmin1_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tmin1.tif")
 tmin2_yw202145<-rast("/Users/nooni/Box/RNR597_data/data/yw202145/tmin2.tif")
 
 #Making year raster
-yw202145_list <-c(humd1_yw202145, humd2_yw202145, prec1_yw202145, prec2_yw202145, tavg1_yw202145,tavg2_yw202145,tmax1_yw202145, tmax2_yw202145, tmin1_yw202145,tmin2_yw202145)
+yw202145_list <-c(humd1_yw202145, humd2_yw202145, prec1_yw202145, prec2_yw202145, tavg1_yw202145,tavg2_yw202145,tmax1_yw202145, tmax2_yw202145, tmin1_yw202145,tmin2_yw202145, NDVI, MNDWI)
 yw202145_rast <-stack(yw202145_list)
 
 yw202145_rast <- crop(yw202145_rast, maricopa)
 #plot(YW202145_rast)
-writeRaster(yw202145_rast, here("Natalie/data_cleaned/Env_raster/YW202145_rast.tiff"))
+#writeRaster(yw202145_rast, here("Natalie/data_cleaned/Env_raster/YW202145_rast.tiff"), overwrite = TRUE)
 ```
 
 
-cq-Prediction: prec1, prec2, tmin1, tavg1, tmax1, humd2
-
+cq-predict
 ```{r}
 cq_subset <- c("humd2", "prec1", "prec2", "tavg1","tmax1", "tmin1")
+cq_subset_h2o <- c("humd2", "prec1", "prec2", "tavg1","tmax1", "tmin1", "NDVI", "MNDWI")
+
+#Subsetting years
 yw201319_cq <- subset(YW201319_rast, cq_subset)
-plot(yw201319_cq)
+yw201319_cq_h2o <- subset(YW201319_rast, cq_subset_h2o)
+yw201332_cq <-subset(yw201332_rast, cq_subset)
+yw201332_cq_h2o <- subset(yw201332_rast, cq_subset_h2o)
+yw201345_cq <-subset(yw201345_rast, cq_subset)
+yw201345_cq_h2o<-subset(yw201345_rast, cq_subset_h2o)
+yw201719_cq<-subset(yw201719_rast, cq_subset)
+yw201719_cq_h2o <-subset(yw201719_rast, cq_subset_h2o)
+yw201732_cq<-subset(yw201732_rast, cq_subset)
+yw201732_cq_h2o <-subset(yw201732_rast, cq_subset_h2o)
+yw201745_cq<-subset(yw201745_rast, cq_subset)
+yw201745_cq_h2o <-subset(yw201745_rast, cq_subset_h2o)
+yw202119_cq<-subset(yw202119_rast, cq_subset)
+yw202119_cq_h2o <-subset(yw202119_rast, cq_subset_h2o)
+yw202132_cq<-subset(yw202132_rast, cq_subset)
+yw202132_cq_h2o <-subset(yw202132_rast, cq_subset_h2o)
+yw202145_cq<-subset(yw202145_rast, cq_subset)
+yw202145_cq_h2o <- subset(yw202145_rast, cq_subset_h2o)
+
+
+#**GLM**
+#glm_model_cq_h20 <- readRDS(here("Natalie/data_cleaned/models/glm_model_cq_h20.rds"))
+#glm_model_cq <- readRDS(here("Natalie/data_cleaned/models/glm_model_cq.rds"))
 
 cq201319_glm <- predict(yw201319_cq, glm_model_cq) #without water
-plot(cq201319_glm)
+cq201319_h2o_glm <- predict(yw201319_cq_h2o, glm_model_cq_h20) #with water
+
+cq201332_glm <- predict(yw201332_cq, glm_model_cq) #without water
+cq201332_h2o_glm <- predict(yw201332_cq_h2o, glm_model_cq_h20) #with water
+
+cq201345_glm <- predict(yw201345_cq, glm_model_cq) #without water
+cq201345_h2o_glm <- predict(yw201345_cq_h2o, glm_model_cq_h20) #with water
+
+cq201919_glm <- predict(yw201719_cq, glm_model_cq) #without water
+cq201919_h2o_glm <- predict(yw201719_cq_h2o, glm_model_cq_h20) #with water
+
+cq201932_glm <- predict(yw201732_cq, glm_model_cq) #without water
+cq201932_h2o_glm <- predict(yw201732_cq_h2o, glm_model_cq_h20) #with water
+
+cq201945_glm <- predict(yw201745_cq, glm_model_cq) #without water
+cq201945_h2o_glm <- predict(yw201745_cq_h2o, glm_model_cq_h20) #with water
+
+cq202119_glm <- predict(yw202119_cq, glm_model_cq) #without water
+cq202119_h2o_glm <- predict(yw202119_cq_h2o, glm_model_cq_h20) #with water
+
+cq202132_glm <- predict(yw202132_cq, glm_model_cq) #without water
+cq202132_h2o_glm <- predict(yw202132_cq_h2o, glm_model_cq_h20) #with water
+
+
+cq202145_glm <- predict(yw202145_cq, glm_model_cq) #without water
+cq202145_h2o_glm <- predict(yw202145_cq_h2o, glm_model_cq_h20) #with water
+
+
+#writeRaster(cq201319_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201319_glm.tif")
+#writeRaster(cq201319_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201319_h2o_glm.tif")
+#writeRaster(cq201332_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201332_glm.tif")
+#writeRaster(cq201332_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201332_h2o_glm.tif")
+#writeRaster(cq201345_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201345_glm.tif")
+#writeRaster(cq201345_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201345_h2o_glm.tif")
+#writeRaster(cq201919_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201919_glm.tif")
+#writeRaster(cq201345_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201919_h2o_glm.tif")
+#writeRaster(cq201919_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201932_glm.tif")
+#writeRaster(cq201932_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201932_h2o_glm.tif")
+#writeRaster(cq201945_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201945_glm.tif")
+#writeRaster(cq201945_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq201945_h2o_glm.tif")
+#writeRaster(cq202119_glm , file = "/Users/nooni/Box/RNR597_data/prediction/cq202119_glm.tif")
+#writeRaster(cq202119_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq202119_h2o_glm.tif")
+#writeRaster(cq202132_glm , file = "/Users/nooni/Box/RNR597_data/prediction/cq202132_glm.tif")
+#writeRaster(cq202132_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq202132_h2o_glm.tif")
+#writeRaster(cq202145_glm , file = "/Users/nooni/Box/RNR597_data/prediction/cq202145_glm.tif")
+#writeRaster(cq202145_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/cq202145_h2o_glm.tif")
+
+
+#**RF**
+#rf_model_cq_h20 <- readRDS(here("Natalie/data_cleaned/models/rf_model_cq_h2o.rds"))
+#rf_model_cq <- readRDS(here("Natalie/data_cleaned/models/rf_model_cq.rds"))
+
+cq201319_rf <- predict(yw201319_cq, rf_model_cq) #without water
+cq201319_h2o_rf <- predict(yw201319_cq_h2o, rf_model_cq_h20) #with water
+
+cq201332_rf <- predict(yw201332_cq, rf_model_cq) #without water
+cq201332_h2o_rf <- predict(yw201332_cq_h2o, rf_model_cq_h20) #with water
+
+cq201345_rf <- predict(yw201345_cq, rf_model_cq) #without water
+cq201345_h2o_rf <- predict(yw201345_cq_h2o, rf_model_cq_h20) #with water
+
+cq201919_rf <- predict(yw201719_cq, rf_model_cq) #without water
+cq201919_h2o_rf <- predict(yw201719_cq_h2o, rf_model_cq_h20) #with water
+
+cq201932_rf <- predict(yw201732_cq, rf_model_cq) #without water
+cq201932_h2o_rf <- predict(yw201732_cq_h2o, rf_model_cq_h20) #with water
+
+cq201945_rf <- predict(yw201745_cq, rf_model_cq) #without water
+cq201945_h2o_rf <- predict(yw201745_cq_h2o, rf_model_cq_h20) #with water
+
+cq202119_rf <- predict(yw202119_cq, rf_model_cq) #without water
+cq202119_h2o_rf <- predict(yw202119_cq_h2o, rf_model_cq_h20) #with water
+
+cq202132_rf <- predict(yw202132_cq, rf_model_cq) #without water
+cq202132_h2o_rf <- predict(yw202132_cq_h2o, rf_model_cq_h20) #with water
+
+cq202145_rf <- predict(yw202145_cq, rf_model_cq) #without water
+cq202145_h2o_rf <- predict(yw202145_cq_h2o, rf_model_cq_h20) #with water
+
+#writeRaster(cq201319_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201319_rf.tif")
+#writeRaster(cq201319_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201319_h2o_rf.tif")
+#writeRaster(cq201332_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201332_rf.tif")
+#writeRaster(cq201332_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201332_h2o_rf.tif")
+#writeRaster(cq201345_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201345_rf.tif")
+#writeRaster(cq201345_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201345_h2o_rf.tif")
+#writeRaster(cq201919_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201919_rf.tif")
+#writeRaster(cq201345_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201919_h2o_rf.tif")
+#writeRaster(cq201919_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201932_rf.tif")
+#writeRaster(cq201932_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201932_h2o_rf.tif")
+#writeRaster(cq201945_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201945_rf.tif")
+#writeRaster(cq201945_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq201945_h2o_rf.tif")
+#writeRaster(cq202119_rf , file = "/Users/nooni/Box/RNR597_data/prediction/cq202119_rf.tif")
+#writeRaster(cq202119_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq202119_h2o_rf.tif")
+#writeRaster(cq202132_rf , file = "/Users/nooni/Box/RNR597_data/prediction/cq202132_rf.tif")
+#writeRaster(cq202132_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq202132_h2o_rf.tif")
+#writeRaster(cq202145_rf , file = "/Users/nooni/Box/RNR597_data/prediction/cq202145_rf.tif")
+#writeRaster(cq202145_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/cq202145_h2o_rf.tif")
 ```
 
 
 
-Messing around trying to get the NDVI and environemtnal vairables
+
+
+ct-predict
 ```{r}
-NDVI <- rast("/Users/nooni/Box/RNR597_data/NDVI.tif")
-MNDWI <- rast("/Users/nooni/Box/RNR597_data/MNDWI.tif")
-NDVI_crop<- crop(NDVI, maricopa)
-MNDWI_crop <- crop(MNDWI, maricopa)
+ct_subset <- c("prec1", "prec2", "tmin1", "tavg1", "tmax1", "humd2")
+ct_subset_h2o <- c("prec1", "prec2", "tmin1", "tavg1", "tmax1", "humd2", "NDVI", "MNDWI")
+
+#Subsetting years
+yw201319_ct <- subset(YW201319_rast, ct_subset)
+yw201319_ct_h2o <- subset(YW201319_rast, ct_subset_h2o)
+yw201332_ct <-subset(yw201332_rast, ct_subset)
+yw201332_ct_h2o <- subset(yw201332_rast, ct_subset_h2o)
+yw201345_ct <-subset(yw201345_rast, ct_subset)
+yw201345_ct_h2o<-subset(yw201345_rast, ct_subset_h2o)
+yw201719_ct<-subset(yw201719_rast, ct_subset)
+yw201719_ct_h2o <-subset(yw201719_rast, ct_subset_h2o)
+yw201732_ct<-subset(yw201732_rast, ct_subset)
+yw201732_ct_h2o <-subset(yw201732_rast, ct_subset_h2o)
+yw201745_ct<-subset(yw201745_rast, ct_subset)
+yw201745_ct_h2o <-subset(yw201745_rast, ct_subset_h2o)
+yw202119_ct<-subset(yw202119_rast, ct_subset)
+yw202119_ct_h2o <-subset(yw202119_rast, ct_subset_h2o)
+yw202132_ct<-subset(yw202132_rast, ct_subset)
+yw202132_ct_h2o <-subset(yw202132_rast, ct_subset_h2o)
+yw202145_ct<-subset(yw202145_rast, ct_subset)
+yw202145_ct_h2o <- subset(yw202145_rast, ct_subset_h2o)
 
 
-nd_yw201319_h2o_cq <-rast(yw201319_h2o_cq_list)
-plot(nd_yw201319_h2o_cq)
+#**GLM**
+#glm_model_ct_h20 <- readRDS(here("Natalie/data_cleaned/models/glm_model_ct_h20.rds"))
+#glm_model_ct <- readRDS(here("Natalie/data_cleaned/models/glm_model_ct.rds"))
 
-plot(NDVI)
+ct201319_glm <- predict(yw201319_ct, glm_model_ct) #without water
+ct201319_h2o_glm <- predict(yw201319_ct_h2o, glm_model_ct_h20) #with water
 
-cq201319_h2o_glm <- predict(object = c(NDVI_crop, yw201319_cq), glm_model_cq_h20)
-summary(glm_model_cq_h20)
-summary(yw201319_cq)
-plot(cq201319_glm)
+ct201332_glm <- predict(yw201332_ct, glm_model_ct) #without water
+ct201332_h2o_glm <- predict(yw201332_ct_h2o, glm_model_ct_h20) #with water
+
+ct201345_glm <- predict(yw201345_ct, glm_model_ct) #without water
+ct201345_h2o_glm <- predict(yw201345_ct_h2o, glm_model_ct_h20) #with water
+
+ct201919_glm <- predict(yw201719_ct, glm_model_ct) #without water
+ct201919_h2o_glm <- predict(yw201719_ct_h2o, glm_model_ct_h20) #with water
+
+ct201932_glm <- predict(yw201732_ct, glm_model_ct) #without water
+ct201932_h2o_glm <- predict(yw201732_ct_h2o, glm_model_ct_h20) #with water
+
+ct201945_glm <- predict(yw201745_ct, glm_model_ct) #without water
+ct201945_h2o_glm <- predict(yw201745_ct_h2o, glm_model_ct_h20) #with water
+
+ct202119_glm <- predict(yw202119_ct, glm_model_ct) #without water
+ct202119_h2o_glm <- predict(yw202119_ct_h2o, glm_model_ct_h20) #with water
+
+ct202132_glm <- predict(yw202132_ct, glm_model_ct) #without water
+ct202132_h2o_glm <- predict(yw202132_ct_h2o, glm_model_ct_h20) #with water
+
+ct202145_glm <- predict(yw202145_ct, glm_model_ct) #without water
+ct202145_h2o_glm <- predict(yw202145_ct_h2o, glm_model_ct_h20) #with water
+
+
+#writeRaster(ct201319_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201319_glm.tif")
+#writeRaster(ct201319_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201319_h2o_glm.tif")
+#writeRaster(ct201332_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201332_glm.tif")
+#writeRaster(ct201332_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201332_h2o_glm.tif")
+#writeRaster(ct201345_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201345_glm.tif")
+#writeRaster(ct201345_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201345_h2o_glm.tif")
+#writeRaster(ct201919_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201919_glm.tif")
+#writeRaster(ct201345_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201919_h2o_glm.tif")
+#writeRaster(ct201919_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201932_glm.tif")
+#writeRaster(ct201932_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201932_h2o_glm.tif")
+#writeRaster(ct201945_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201945_glm.tif")
+#writeRaster(ct201945_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct201945_h2o_glm.tif")
+#writeRaster(ct202119_glm , file = "/Users/nooni/Box/RNR597_data/prediction/ct202119_glm.tif")
+#writeRaster(ct202119_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct202119_h2o_glm.tif")
+#writeRaster(ct202132_glm , file = "/Users/nooni/Box/RNR597_data/prediction/ct202132_glm.tif")
+#writeRaster(ct202132_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/ct202132_h2o_glm.tif")
+
+#**RF**
+
+rf_model_ct_h20 <- readRDS(here("Natalie/data_cleaned/models/rf_model_ct_h2o.rds"))
+rf_model_ct <- readRDS(here("Natalie/data_cleaned/models/rf_model_ct.rds"))
+
+ct201319_rf <- predict(yw201319_ct, rf_model_ct) #without water
+ct201319_h2o_rf <- predict(yw201319_ct_h2o, rf_model_ct_h20) #with water
+
+ct201332_rf <- predict(yw201332_ct, rf_model_ct) #without water
+ct201332_h2o_rf <- predict(yw201332_ct_h2o, rf_model_ct_h20) #with water
+
+ct201345_rf <- predict(yw201345_ct, rf_model_ct) #without water
+ct201345_h2o_rf <- predict(yw201345_ct_h2o, rf_model_ct_h20) #with water
+
+ct201919_rf <- predict(yw201719_ct, rf_model_ct) #without water
+ct201919_h2o_rf <- predict(yw201719_ct_h2o, rf_model_ct_h20) #with water
+
+ct201932_rf <- predict(yw201732_ct, rf_model_ct) #without water
+ct201932_h2o_rf <- predict(yw201732_ct_h2o, rf_model_ct_h20) #with water
+
+ct201945_rf <- predict(yw201745_ct, rf_model_ct) #without water
+ct201945_h2o_rf <- predict(yw201745_ct_h2o, rf_model_ct_h20) #with water
+
+ct202119_rf <- predict(yw202119_ct, rf_model_ct) #without water
+ct202119_h2o_rf <- predict(yw202119_ct_h2o, rf_model_ct_h20) #with water
+
+ct202132_rf <- predict(yw202132_ct, rf_model_ct) #without water
+ct202132_h2o_rf <- predict(yw202132_ct_h2o, rf_model_ct_h20) #with water
+
+ct202145_rf <- predict(yw202145_ct, rf_model_ct) #without water
+ct202145_h2o_rf <- predict(yw202145_ct_h2o, rf_model_ct_h20) #with water
+
+
+#writeRaster(ct201319_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201319_rf.tif")
+#writeRaster(ct201319_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201319_h2o_rf.tif")
+#writeRaster(ct201332_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201332_rf.tif")
+#writeRaster(ct201332_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201332_h2o_rf.tif")
+#writeRaster(ct201345_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201345_rf.tif")
+#writeRaster(ct201345_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201345_h2o_rf.tif")
+#writeRaster(ct201919_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201919_rf.tif")
+#writeRaster(ct201345_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201919_h2o_rf.tif")
+#writeRaster(ct201919_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201932_rf.tif")
+#writeRaster(ct201932_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201932_h2o_rf.tif")
+#writeRaster(ct201945_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201945_rf.tif")
+#writeRaster(ct201945_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct201945_h2o_rf.tif")
+#writeRaster(ct202119_rf , file = "/Users/nooni/Box/RNR597_data/prediction/ct202119_rf.tif")
+#writeRaster(ct202119_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct202119_h2o_rf.tif")
+#writeRaster(ct202132_rf , file = "/Users/nooni/Box/RNR597_data/prediction/ct202132_rf.tif")
+#writeRaster(ct202132_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct202132_h2o_rf.tif")
+#writeRaster(ct202145_rf , file = "/Users/nooni/Box/RNR597_data/prediction/ct202145_rf.tif")
+#writeRaster(ct202145_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/ct202145_h2o_rf.tif")
+
+```
+
+
+
+aa-predict 
+```{r}
+aa_subset <- c("prec1", "prec2", "tmin2", "tavg2", "humd2", "tmax2")
+aa_subset_h2o <- c("prec1", "prec2", "tmin2", "tavg2", "humd2", "tmax2", "NDVI", "MNDWI")
+
+#Subsetting years
+yw201319_aa <- subset(YW201319_rast, aa_subset)
+yw201319_aa_h2o <- subset(YW201319_rast, aa_subset_h2o)
+yw201332_aa <-subset(yw201332_rast, aa_subset)
+yw201332_aa_h2o <- subset(yw201332_rast, aa_subset_h2o)
+yw201345_aa <-subset(yw201345_rast, aa_subset)
+yw201345_aa_h2o<-subset(yw201345_rast, aa_subset_h2o)
+yw201719_aa<-subset(yw201719_rast, aa_subset)
+yw201719_aa_h2o <-subset(yw201719_rast, aa_subset_h2o)
+yw201732_aa<-subset(yw201732_rast, aa_subset)
+yw201732_aa_h2o <-subset(yw201732_rast, aa_subset_h2o)
+yw201745_aa<-subset(yw201745_rast, aa_subset)
+yw201745_aa_h2o <-subset(yw201745_rast, aa_subset_h2o)
+yw202119_aa<-subset(yw202119_rast, aa_subset)
+yw202119_aa_h2o <-subset(yw202119_rast, aa_subset_h2o)
+yw202132_aa<-subset(yw202132_rast, aa_subset)
+yw202132_aa_h2o <-subset(yw202132_rast, aa_subset_h2o)
+yw202145_aa<-subset(yw202145_rast, aa_subset)
+yw202145_aa_h2o <- subset(yw202145_rast, aa_subset_h2o)
+
+
+#**GLM**
+
+#glm_model_aa_h20 <- readRDS(here("Natalie/data_cleaned/models/glm_model_aa_h20.rds"))
+#glm_model_aa <- readRDS(here("Natalie/data_cleaned/models/glm_model_aa.rds"))
+
+aa201319_glm <- predict(yw201319_aa, glm_model_aa) #without water
+aa201319_h2o_glm <- predict(yw201319_aa_h2o, glm_model_aa_h20) #with water
+
+aa201332_glm <- predict(yw201332_aa, glm_model_aa) #without water
+aa201332_h2o_glm <- predict(yw201332_aa_h2o, glm_model_aa_h20) #with water
+
+aa201345_glm <- predict(yw201345_aa, glm_model_aa) #without water
+aa201345_h2o_glm <- predict(yw201345_aa_h2o, glm_model_aa_h20) #with water
+
+aa201919_glm <- predict(yw201719_aa, glm_model_aa) #without water
+aa201919_h2o_glm <- predict(yw201719_aa_h2o, glm_model_aa_h20) #with water
+
+aa201932_glm <- predict(yw201732_aa, glm_model_aa) #without water
+aa201932_h2o_glm <- predict(yw201732_aa_h2o, glm_model_aa_h20) #with water
+
+aa201945_glm <- predict(yw201745_aa, glm_model_aa) #without water
+aa201945_h2o_glm <- predict(yw201745_aa_h2o, glm_model_aa_h20) #with water
+
+aa202119_glm <- predict(yw202119_aa, glm_model_aa) #without water
+aa202119_h2o_glm <- predict(yw202119_aa_h2o, glm_model_aa_h20) #with water
+
+aa202132_glm <- predict(yw202132_aa, glm_model_aa) #without water
+aa202132_h2o_glm <- predict(yw202132_aa_h2o, glm_model_aa_h20) #with water
+
+aa202145_glm <- predict(yw202145_aa, glm_model_aa) #without water
+aa202145_h2o_glm <- predict(yw202145_aa_h2o, glm_model_aa_h20) #with water
+
+
+#writeRaster(aa201319_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201319_glm.tif")
+#writeRaster(aa201319_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201319_h2o_glm.tif")
+#writeRaster(aa201332_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201332_glm.tif")
+#writeRaster(aa201332_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201332_h2o_glm.tif")
+#writeRaster(aa201345_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201345_glm.tif")
+#writeRaster(aa201345_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201345_h2o_glm.tif")
+#writeRaster(aa201919_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201919_glm.tif")
+#writeRaster(aa201345_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201919_h2o_glm.tif")
+#writeRaster(aa201919_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201932_glm.tif")
+#writeRaster(aa201932_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201932_h2o_glm.tif")
+#writeRaster(aa201945_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201945_glm.tif")
+#writeRaster(aa201945_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa201945_h2o_glm.tif")
+#writeRaster(aa202119_glm , file = "/Users/nooni/Box/RNR597_data/prediction/aa202119_glm.tif")
+#writeRaster(aa202119_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa202119_h2o_glm.tif")
+#writeRaster(aa202132_glm , file = "/Users/nooni/Box/RNR597_data/prediction/aa202132_glm.tif")
+#writeRaster(aa202132_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa202132_h2o_glm.tif")
+#writeRaster(aa202145_glm , file = "/Users/nooni/Box/RNR597_data/prediction/aa202145_glm.tif")
+#writeRaster(aa202145_h2o_glm, file = "/Users/nooni/Box/RNR597_data/prediction/aa202145_h2o_glm.tif")
+
+
+#**RF**
+rf_model_aa_h20 <- readRDS(here("Natalie/data_cleaned/models/rf_model_aa_h2o.rds"))
+rf_model_aa <- readRDS(here("Natalie/data_cleaned/models/rf_model_aa.rds"))
+
+aa201319_rf <- predict(yw201319_aa, rf_model_aa) #without water
+aa201319_h2o_rf <- predict(yw201319_aa_h2o, rf_model_aa_h20) #with water
+
+aa201332_rf <- predict(yw201332_aa, rf_model_aa) #without water
+aa201332_h2o_rf <- predict(yw201332_aa_h2o, rf_model_aa_h20) #with water
+
+aa201345_rf <- predict(yw201345_aa, rf_model_aa) #without water
+aa201345_h2o_rf <- predict(yw201345_aa_h2o, rf_model_aa_h20) #with water
+
+aa201919_rf <- predict(yw201719_aa, rf_model_aa) #without water
+aa201919_h2o_rf <- predict(yw201719_aa_h2o, rf_model_aa_h20) #with water
+
+aa201932_rf <- predict(yw201732_aa, rf_model_aa) #without water
+aa201932_h2o_rf <- predict(yw201732_aa_h2o, rf_model_aa_h20) #with water
+
+aa201945_rf <- predict(yw201745_aa, rf_model_aa) #without water
+aa201945_h2o_rf <- predict(yw201745_aa_h2o, rf_model_aa_h20) #with water
+
+aa202119_rf <- predict(yw202119_aa, rf_model_aa) #without water
+aa202119_h2o_rf <- predict(yw202119_aa_h2o, rf_model_aa_h20) #with water
+
+aa202132_rf <- predict(yw202132_aa, rf_model_aa) #without water
+aa202132_h2o_rf <- predict(yw202132_aa_h2o, rf_model_aa_h20) #with water
+
+aa202145_rf <- predict(yw202145_aa, rf_model_aa) #without water
+aa202145_h2o_rf <- predict(yw202145_aa_h2o, rf_model_aa_h20) #with water
+
+
+#writeRaster(aa201319_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201319_rf.tif")
+#writeRaster(aa201319_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201319_h2o_rf.tif")
+#writeRaster(aa201332_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201332_rf.tif")
+#writeRaster(aa201332_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201332_h2o_rf.tif")
+#writeRaster(aa201345_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201345_rf.tif")
+#writeRaster(aa201345_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201345_h2o_rf.tif")
+#writeRaster(aa201919_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201919_rf.tif")
+#writeRaster(aa201345_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201919_h2o_rf.tif")
+#writeRaster(aa201919_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201932_rf.tif")
+#writeRaster(aa201932_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201932_h2o_rf.tif")
+#writeRaster(aa201945_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201945_rf.tif")
+#writeRaster(aa201945_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa201945_h2o_rf.tif")
+#writeRaster(aa202119_rf , file = "/Users/nooni/Box/RNR597_data/prediction/aa202119_rf.tif")
+#writeRaster(aa202119_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa202119_h2o_rf.tif")
+#writeRaster(aa202132_rf , file = "/Users/nooni/Box/RNR597_data/prediction/aa202132_rf.tif")
+#writeRaster(aa202132_h2o_rf, file = "/Users/nooni/Box/RNR597_data/prediction/aa202132_h2o_rf.tif")
+
+
 ```
 
 
@@ -500,13 +875,6 @@ glm_test_pred <-extract(glm_predict, test_coords, pos_label = 1)
 
 #random forest#random forglm_predictest
 rf_test_pred <- extract(rf_pred, test_coords, pos_label = 1) 
-
-#Maxent 
- if (!is.null(maxent_pred)) {
-  maxent_test_pred <- extract(maxent_pred, test_coords)
-} else {
-  maxent_test_pred <- NULL
-}
 
 #Calculating AUC
 
