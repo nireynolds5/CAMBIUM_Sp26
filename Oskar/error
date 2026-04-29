@@ -1,0 +1,44 @@
+> aa_ensemble_simple <- BIOMOD_EnsembleModeling(
++   bm.mod = aa_base_simple,
++   models.chosen = "all", # both RF and GLM
++   em.algo = "EMwmean", # weighted means following Reynolds's work
++   # default importance of weights is proportional to single models evaluation scores.
++   metric.eval = c('ACCURACY', 'AUCroc') # how I want to evaluate the models: fraction of correct predictions and AUC of relative operating characteristic
++ )
+
+-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-= Build Ensemble Models -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+   ! all models available will be included in ensemble.modeling
+  ! Ensemble Models will be filtered and/or weighted using validation dataset (if possible). Please use `metric.select.dataset` for alternative options.
+   ! No metric.select.thresh -> All models will be kept for Ensemble Modeling
+
+  > allData_RUN1_mergedAlgo ensemble modeling
+
+		  original models scores =  0.668 0.731
+		  final models weights =  0.477 0.523
+
+   > Probabilities weighting mean by ACCURACY ...
+Warning in gzfile(file, "wb") :
+  cannot open compressed file 'C:/Users/oskar/OneDrive/Documents/University_of_Arizona/University_of_Arizona-Spring_2026/RNR_497-Advanced_Topics_in_Natural_Resources_Conservation/dataset_and_code/Aedes.aegypti/.BIOMOD_DATA/1777329713/ensemble.models/ensemble.models.predictions/Aedes.aegypti_EMwmeanByACCURACY_allData_RUN1_mergedAlgo.predictions', probable reason 'No such file or directory'
+		  original models scores =  0.709 0.804
+		  final models weights =  0.469 0.531
+
+   > Probabilities weighting mean by AUCroc ...
+Warning in gzfile(file, "wb") :
+  cannot open compressed file 'C:/Users/oskar/OneDrive/Documents/University_of_Arizona/University_of_Arizona-Spring_2026/RNR_497-Advanced_Topics_in_Natural_Resources_Conservation/dataset_and_code/Aedes.aegypti/.BIOMOD_DATA/1777329713/ensemble.models/ensemble.models.predictions/Aedes.aegypti_EMwmeanByAUCroc_allData_RUN1_mergedAlgo.predictions', probable reason 'No such file or directory'
+  > allData_RUN2_mergedAlgo ensemble modeling
+
+		  original models scores =  0.665 0.733
+		  final models weights =  0.476 0.524
+
+   > Probabilities weighting mean by ACCURACY ...
+Warning in gzfile(file, "wb") :
+  cannot open compressed file 'C:/Users/oskar/OneDrive/Documents/University_of_Arizona/University_of_Arizona-Spring_2026/RNR_497-Advanced_Topics_in_Natural_Resources_Conservation/dataset_and_code/Aedes.aegypti/.BIOMOD_DATA/1777329713/ensemble.models/ensemble.models.predictions/Aedes.aegypti_EMwmeanByACCURACY_allData_RUN2_mergedAlgo.predictions', probable reason 'No such file or directory'
+		  original models scores =  0.71 0.804
+		  final models weights =  0.469 0.531
+
+   > Probabilities weighting mean by AUCroc ...
+Warning in gzfile(file, "wb") :
+  cannot open compressed file 'C:/Users/oskar/OneDrive/Documents/University_of_Arizona/University_of_Arizona-Spring_2026/RNR_497-Advanced_Topics_in_Natural_Resources_Conservation/dataset_and_code/Aedes.aegypti/.BIOMOD_DATA/1777329713/ensemble.models/ensemble.models.predictions/Aedes.aegypti_EMwmeanByAUCroc_allData_RUN2_mergedAlgo.predictions', probable reason 'No such file or directory'
+Error in { : 
+  task 1 failed - "task 1 failed - "task 1 failed - "cannot open the connection"""
