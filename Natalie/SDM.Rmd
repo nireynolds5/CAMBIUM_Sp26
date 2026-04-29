@@ -235,8 +235,8 @@ Loading in Weather Tiffs
 ```{r}
 maricopa <- extent(-112.573997704, -111.5837, 33.2043, 33.7987)
 
-#NDVI <- rast("/Users/nooni/Box/RNR597_data/data/NDVI.tif")
-#MNDWI <-rast("/Users/nooni/Box/RNR597_data/data/MNDWI.tif")
+NDVI <- rast("/Users/nooni/Box/RNR597_data/data/NDVI.tif")
+MNDWI <-rast("/Users/nooni/Box/RNR597_data/data/MNDWI.tif")
 
 #YW201319
 humd1_yw201319<-rast("/Users/nooni/Box/RNR597_data/data/yw201319/humd1.tif")
@@ -841,49 +841,42 @@ aa202145_h2o_rf <- predict(yw202145_aa_h2o, rf_model_aa_h20) #with water
 AUC Values - cq
 ```{r}
 #**cq**
-#train_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/train_data_cq.csv"))
+train_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/train_data_cq.csv"))
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
 test_coords_cq <- test_data_cq[, c("Longitude", "Latitude")]
 test_presence_cq <- as.numeric(test_data_cq$cq)
 
 #**YW201319**
 #glm_h20
-#cq201319_h2o_glm <- raster("C:/Users/nooni/Box/RNR597_data/prediction/cq201319_h2o_glm.tif")
+cq201319_h2o_glm <- raster("C:/Users/nooni/Box/RNR597_data/prediction/cq201319_h2o_glm.tif")
 glm_test_pred_cq201319_h2o <- extract(cq201319_h2o_glm, test_coords_cq, pos_label =1)
 glm_DFauc_cq201319_h2o <- data.frame(test_data_cq$X, test_presence_cq, glm_test_pred_cq201319_h2o)
 glm_auc_cq201319_h2o <- PresenceAbsence ::auc(glm_DFauc_cq201319_h2o, which.model = TRUE, na.rm=TRUE)
 
 #glm
-#cq201319_glm <- raster("C:/Users/nooni/Box/RNR597_data/prediction/cq201319_glm.tif")
+cq201319_glm <- raster("C:/Users/nooni/Box/RNR597_data/prediction/cq201319_glm.tif")
 glm_test_pred_cq201319<- extract(cq201319_glm, test_coords_cq, pos_label =1)
 glm_DFauc_cq201319 <- data.frame(test_data_cq$X, test_presence_cq, glm_test_pred_cq201319)
 glm_auc_cq201319 <- PresenceAbsence ::auc(glm_DFauc_cq201319, which.model = TRUE, na.rm=TRUE)
 
 #rf_h20
-#cq201319_h2o_rf <- raster("C:/Users/nooni/Box/RNR597_data/prediction/cq201319_h2o_rf.tif")
+cq201319_h2o_rf <- raster("C:/Users/nooni/Box/RNR597_data/prediction/cq201319_h2o_rf.tif")
 rf_test_pred_cq201319_h2o <- extract(cq201319_h2o_rf, test_coords_cq, pos_label =1)
 rf_DFauc_cq201319_h2o <- data.frame(test_data_cq$X, test_presence_cq, rf_test_pred_cq201319_h2o)
 rf_auc_cq201319_h2o <- PresenceAbsence ::auc(rf_DFauc_cq201319_h2o, which.model = TRUE, na.rm=TRUE)
 
 #rf
-#cq201319_rf <- raster("C:/Users/nooni/Box/RNR597_data/prediction/cq201319_rf.tif")
+cq201319_rf <- raster("C:/Users/nooni/Box/RNR597_data/prediction/cq201319_rf.tif")
 rf_test_pred_cq201319<- extract(cq201319_rf, test_coords_cq, pos_label =1)
 rf_DFauc_cq201319 <- data.frame(test_data_cq$X, test_presence_cq, rf_test_pred_cq201319)
 rf_auc_cq201319 <- PresenceAbsence ::auc(rf_DFauc_cq201319, which.model = TRUE, na.rm=TRUE)
 
 
 ##**AUC Dataframe**
-auc_cq_201319_h2o <- rbind(glm_auc_cq201319_h2o, rf_auc_cq201319_h2o)
-colnames(auc_cq_201319_h2o) <- c("AUC", "StdDev")
-rownames(auc_cq_201319_h2o) <-c("GLM", "Rf")
-
-auc_cq_201319 <- rbind(glm_auc_cq201319, rf_auc_cq201319)
-colnames(auc_cq_201319) <- c("AUC", "StdDev")
-rownames(auc_cq_201319) <-c("GLM", "Rf")
-
-#write.csv(auc_cq_201319_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201319_h2o.csv")
-#write.csv(auc_cq_201319, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201319.csv")
-
+auccq_201319 <- rbind(glm_auc_cq201319, glm_auc_cq201319_h2o, rf_auc_cq201319, rf_auc_cq201319_h2o)
+colnames(auccq_201319) <- c("AUC", "StdDev")
+rownames(auccq_201319) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(auccq_201319, "C:/Users/nooni/Box/RNR597_data/AUC/auccq_201319.csv")
 
 
 #**YW201332**
@@ -913,16 +906,10 @@ rf_auc_cq201332 <- PresenceAbsence ::auc(rf_DFauc_cq201332, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_cq_201332_h2o <- rbind(glm_auc_cq201332_h2o, rf_auc_cq201332_h2o)
-colnames(auc_cq_201332_h2o) <- c("AUC", "StdDev")
-rownames(auc_cq_201332_h2o) <-c("GLM", "Rf")
-
-auc_cq_201332 <- rbind(glm_auc_cq201332, rf_auc_cq201332)
-colnames(auc_cq_201332) <- c("AUC", "StdDev")
-rownames(auc_cq_201332) <-c("GLM", "Rf")
-
-write.csv(auc_cq_201332_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201332_h2o.csv")
-write.csv(auc_cq_201332, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201332.csv")
+auccq_201332 <- rbind(glm_auc_cq201332, glm_auc_cq201332_h2o, rf_auc_cq201332_h2o, rf_auc_cq201332)
+colnames(auccq_201332) <- c("AUC", "StdDev")
+rownames(auccq_201332) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(auccq_201332, "C:/Users/nooni/Box/RNR597_data/AUC/auccq_201332.csv")
 
 
 
@@ -953,16 +940,10 @@ rf_auc_cq201345 <- PresenceAbsence ::auc(rf_DFauc_cq201345, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_cq_201345_h2o <- rbind(glm_auc_cq201345_h2o, rf_auc_cq201345_h2o)
-colnames(auc_cq_201345_h2o) <- c("AUC", "StdDev")
-rownames(auc_cq_201345_h2o) <-c("GLM", "Rf")
-
-auc_cq_201345 <- rbind(glm_auc_cq201345, rf_auc_cq201345)
-colnames(auc_cq_201345) <- c("AUC", "StdDev")
-rownames(auc_cq_201345) <-c("GLM", "Rf")
-
-write.csv(auc_cq_201345_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201345_h2o.csv")
-write.csv(auc_cq_201345, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201345.csv")
+auccq_201345 <- rbind(glm_auc_cq201345, glm_auc_cq201345_h2o, rf_auc_cq201345, rf_auc_cq201345_h2o)
+colnames(auccq_201345) <- c("AUC", "StdDev")
+rownames(auccq_201345) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(auccq_201345, "C:/Users/nooni/Box/RNR597_data/AUC/auccq_201345.csv")
 
 
 
@@ -993,16 +974,10 @@ rf_auc_cq201919 <- PresenceAbsence ::auc(rf_DFauc_cq201919, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_cq_201919_h2o <- rbind(glm_auc_cq201919_h2o, rf_auc_cq201919_h2o)
-colnames(auc_cq_201919_h2o) <- c("AUC", "StdDev")
-rownames(auc_cq_201919_h2o) <-c("GLM", "Rf")
-
-auc_cq_201919 <- rbind(glm_auc_cq201919, rf_auc_cq201919)
-colnames(auc_cq_201919) <- c("AUC", "StdDev")
-rownames(auc_cq_201919) <-c("GLM", "Rf")
-
-write.csv(auc_cq_201919_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201919_h2o.csv")
-write.csv(auc_cq_201919, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201919.csv")
+auccq_201919 <- rbind(glm_auc_cq201919, glm_auc_cq201919_h2o, rf_auc_cq201919, rf_auc_cq201919_h2o)
+colnames(auccq_201919) <- c("AUC", "StdDev")
+rownames(auccq_201919) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(auccq_201919, "C:/Users/nooni/Box/RNR597_data/AUC/auccq_201919.csv")
 
 
 
@@ -1033,16 +1008,10 @@ rf_auc_cq201932 <- PresenceAbsence ::auc(rf_DFauc_cq201932, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_cq_201932_h2o <- rbind(glm_auc_cq201932_h2o, rf_auc_cq201932_h2o)
-colnames(auc_cq_201932_h2o) <- c("AUC", "StdDev")
-rownames(auc_cq_201932_h2o) <-c("GLM", "Rf")
-
-auc_cq_201932 <- rbind(glm_auc_cq201932, rf_auc_cq201932)
-colnames(auc_cq_201932) <- c("AUC", "StdDev")
-rownames(auc_cq_201932) <-c("GLM", "Rf")
-
-write.csv(auc_cq_201932_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201932_h2o.csv")
-write.csv(auc_cq_201932, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201932.csv")
+auccq_201932 <- rbind(glm_auc_cq201932,glm_auc_cq201932_h2o, rf_auc_cq201932, rf_auc_cq201932_h2o)
+colnames(auccq_201932) <- c("AUC", "StdDev")
+rownames(auccq_201932) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(auccq_201932, "C:/Users/nooni/Box/RNR597_data/AUC/auccq_201932.csv")
 
 
 
@@ -1073,16 +1042,10 @@ rf_auc_cq201945 <- PresenceAbsence ::auc(rf_DFauc_cq201945, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_cq_201945_h2o <- rbind(glm_auc_cq201945_h2o, rf_auc_cq201945_h2o)
-colnames(auc_cq_201945_h2o) <- c("AUC", "StdDev")
-rownames(auc_cq_201945_h2o) <-c("GLM", "Rf")
-
-auc_cq_201945 <- rbind(glm_auc_cq201945, rf_auc_cq201945)
-colnames(auc_cq_201945) <- c("AUC", "StdDev")
-rownames(auc_cq_201945) <-c("GLM", "Rf")
-
-write.csv(auc_cq_201945_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201945_h2o.csv")
-write.csv(auc_cq_201945, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201945.csv")
+auccq_201945 <- rbind(glm_auc_cq201945, glm_auc_cq201945_h2o, rf_auc_cq201945,rf_auc_cq201945_h2o)
+colnames(auccq_201945) <- c("AUC", "StdDev")
+rownames(auccq_201945) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(auccq_201945, "C:/Users/nooni/Box/RNR597_data/AUC/auccq_201945.csv")
 
 
 
@@ -1113,16 +1076,10 @@ rf_auc_cq202119 <- PresenceAbsence ::auc(rf_DFauc_cq202119, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_cq_202119_h2o <- rbind(glm_auc_cq202119_h2o, rf_auc_cq202119_h2o)
-colnames(auc_cq_202119_h2o) <- c("AUC", "StdDev")
-rownames(auc_cq_202119_h2o) <-c("GLM", "Rf")
-
-auc_cq_202119 <- rbind(glm_auc_cq202119, rf_auc_cq202119)
-colnames(auc_cq_202119) <- c("AUC", "StdDev")
-rownames(auc_cq_202119) <-c("GLM", "Rf")
-
-write.csv(auc_cq_202119_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202119_h2o.csv")
-write.csv(auc_cq_202119, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202119.csv")
+auccq_202119 <- rbind(glm_auc_cq202119, glm_auc_cq202119_h2o, rf_auc_cq202119, rf_auc_cq202119_h2o)
+colnames(auccq_202119) <- c("AUC", "StdDev")
+rownames(auccq_202119) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(auccq_202119, "C:/Users/nooni/Box/RNR597_data/AUC/auccq_202119.csv")
 
 
 
@@ -1153,16 +1110,10 @@ rf_auc_cq202132 <- PresenceAbsence ::auc(rf_DFauc_cq202132, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_cq_202132_h2o <- rbind(glm_auc_cq202132_h2o, rf_auc_cq202132_h2o)
-colnames(auc_cq_202132_h2o) <- c("AUC", "StdDev")
-rownames(auc_cq_202132_h2o) <-c("GLM", "Rf")
-
-auc_cq_202132 <- rbind(glm_auc_cq202132, rf_auc_cq202132)
-colnames(auc_cq_202132) <- c("AUC", "StdDev")
-rownames(auc_cq_202132) <-c("GLM", "Rf")
-
-write.csv(auc_cq_202132_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202132_h2o.csv")
-write.csv(auc_cq_202132, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202132.csv")
+auccq_202132 <- rbind(glm_auc_cq202132, glm_auc_cq202132_h2o, rf_auc_cq202132, rf_auc_cq202132_h2o)
+colnames(auccq_202132) <- c("AUC", "StdDev")
+rownames(auccq_202132) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(auccq_202132, "C:/Users/nooni/Box/RNR597_data/AUC/auccq_202132.csv")
 
 
 
@@ -1193,23 +1144,15 @@ rf_auc_cq202145 <- PresenceAbsence ::auc(rf_DFauc_cq202145, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_cq_202145_h2o <- rbind(glm_auc_cq202145_h2o, rf_auc_cq202145_h2o)
-colnames(auc_cq_202145_h2o) <- c("AUC", "StdDev")
-rownames(auc_cq_202145_h2o) <-c("GLM", "Rf")
-
-auc_cq_202145 <- rbind(glm_auc_cq202145, rf_auc_cq202145)
-colnames(auc_cq_202145) <- c("AUC", "StdDev")
-rownames(auc_cq_202145) <-c("GLM", "Rf")
-
-write.csv(auc_cq_202145_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202145_h2o.csv")
-write.csv(auc_cq_202145, "C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202145.csv")
-
-
-
+auccq_202145 <- rbind(glm_auc_cq202145, glm_auc_cq202145_h2o, rf_auc_cq202145, rf_auc_cq202145_h2o)
+colnames(auccq_202145) <- c("AUC", "StdDev")
+rownames(auccq_202145) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(auccq_202145, "C:/Users/nooni/Box/RNR597_data/AUC/auccq_202145.csv")
 
 ```
 
-AUC CT
+
+AUC ct
 ```{r}
 #**ct**
 train_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/train_data_ct.csv"))
@@ -1244,17 +1187,10 @@ rf_auc_ct201319 <- PresenceAbsence ::auc(rf_DFauc_ct201319, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_ct_201319_h2o <- rbind(glm_auc_ct201319_h2o, rf_auc_ct201319_h2o)
-colnames(auc_ct_201319_h2o) <- c("AUC", "StdDev")
-rownames(auc_ct_201319_h2o) <-c("GLM", "Rf")
-
-auc_ct_201319 <- rbind(glm_auc_ct201319, rf_auc_ct201319)
-colnames(auc_ct_201319) <- c("AUC", "StdDev")
-rownames(auc_ct_201319) <-c("GLM", "Rf")
-
-write.csv(auc_ct_201319_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201319_h2o.csv")
-write.csv(auc_ct_201319, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201319.csv")
-
+aucct_201319 <- rbind(glm_auc_ct201319, glm_auc_ct201319_h2o, rf_auc_ct201319, rf_auc_ct201319_h2o)
+colnames(aucct_201319) <- c("AUC", "StdDev")
+rownames(aucct_201319) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucct_201319, "C:/Users/nooni/Box/RNR597_data/AUC/aucct_201319.csv")
 
 
 #**YW201332**
@@ -1284,16 +1220,10 @@ rf_auc_ct201332 <- PresenceAbsence ::auc(rf_DFauc_ct201332, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_ct_201332_h2o <- rbind(glm_auc_ct201332_h2o, rf_auc_ct201332_h2o)
-colnames(auc_ct_201332_h2o) <- c("AUC", "StdDev")
-rownames(auc_ct_201332_h2o) <-c("GLM", "Rf")
-
-auc_ct_201332 <- rbind(glm_auc_ct201332, rf_auc_ct201332)
-colnames(auc_ct_201332) <- c("AUC", "StdDev")
-rownames(auc_ct_201332) <-c("GLM", "Rf")
-
-write.csv(auc_ct_201332_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201332_h2o.csv")
-write.csv(auc_ct_201332, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201332.csv")
+aucct_201332 <- rbind(glm_auc_ct201332, glm_auc_ct201332_h2o, rf_auc_ct201332_h2o, rf_auc_ct201332)
+colnames(aucct_201332) <- c("AUC", "StdDev")
+rownames(aucct_201332) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucct_201332, "C:/Users/nooni/Box/RNR597_data/AUC/aucct_201332.csv")
 
 
 
@@ -1324,19 +1254,10 @@ rf_auc_ct201345 <- PresenceAbsence ::auc(rf_DFauc_ct201345, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_ct_201345_h2o <- rbind(glm_auc_ct201345_h2o, rf_auc_ct201345_h2o)
-colnames(auc_ct_201345_h2o) <- c("AUC", "StdDev")
-rownames(auc_ct_201345_h2o) <-c("GLM", "Rf")
-
-auc_ct_201345 <- rbind(glm_auc_ct201345, rf_auc_ct201345)
-colnames(auc_ct_201345) <- c("AUC", "StdDev")
-rownames(auc_ct_201345) <-c("GLM", "Rf")
-
-write.csv(auc_ct_201345_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201345_h2o.csv")
-write.csv(auc_ct_201345, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201345.csv")
-
-
-
+aucct_201345 <- rbind(glm_auc_ct201345, glm_auc_ct201345_h2o, rf_auc_ct201345, rf_auc_ct201345_h2o)
+colnames(aucct_201345) <- c("AUC", "StdDev")
+rownames(aucct_201345) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucct_201345, "C:/Users/nooni/Box/RNR597_data/AUC/aucct_201345.csv")
 
 
 
@@ -1367,16 +1288,10 @@ rf_auc_ct201919 <- PresenceAbsence ::auc(rf_DFauc_ct201919, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_ct_201919_h2o <- rbind(glm_auc_ct201919_h2o, rf_auc_ct201919_h2o)
-colnames(auc_ct_201919_h2o) <- c("AUC", "StdDev")
-rownames(auc_ct_201919_h2o) <-c("GLM", "Rf")
-
-auc_ct_201919 <- rbind(glm_auc_ct201919, rf_auc_ct201919)
-colnames(auc_ct_201919) <- c("AUC", "StdDev")
-rownames(auc_ct_201919) <-c("GLM", "Rf")
-
-write.csv(auc_ct_201919_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201919_h2o.csv")
-write.csv(auc_ct_201919, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201919.csv")
+aucct_201919 <- rbind(glm_auc_ct201919, glm_auc_ct201919_h2o, rf_auc_ct201919, rf_auc_ct201919_h2o)
+colnames(aucct_201919) <- c("AUC", "StdDev")
+rownames(aucct_201919) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucct_201919, "C:/Users/nooni/Box/RNR597_data/AUC/aucct_201919.csv")
 
 
 
@@ -1407,16 +1322,10 @@ rf_auc_ct201932 <- PresenceAbsence ::auc(rf_DFauc_ct201932, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_ct_201932_h2o <- rbind(glm_auc_ct201932_h2o, rf_auc_ct201932_h2o)
-colnames(auc_ct_201932_h2o) <- c("AUC", "StdDev")
-rownames(auc_ct_201932_h2o) <-c("GLM", "Rf")
-
-auc_ct_201932 <- rbind(glm_auc_ct201932, rf_auc_ct201932)
-colnames(auc_ct_201932) <- c("AUC", "StdDev")
-rownames(auc_ct_201932) <-c("GLM", "Rf")
-
-write.csv(auc_ct_201932_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201932_h2o.csv")
-write.csv(auc_ct_201932, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201932.csv")
+aucct_201932 <- rbind(glm_auc_ct201932,glm_auc_ct201932_h2o, rf_auc_ct201932, rf_auc_ct201932_h2o)
+colnames(aucct_201932) <- c("AUC", "StdDev")
+rownames(aucct_201932) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucct_201932, "C:/Users/nooni/Box/RNR597_data/AUC/aucct_201932.csv")
 
 
 
@@ -1447,16 +1356,10 @@ rf_auc_ct201945 <- PresenceAbsence ::auc(rf_DFauc_ct201945, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_ct_201945_h2o <- rbind(glm_auc_ct201945_h2o, rf_auc_ct201945_h2o)
-colnames(auc_ct_201945_h2o) <- c("AUC", "StdDev")
-rownames(auc_ct_201945_h2o) <-c("GLM", "Rf")
-
-auc_ct_201945 <- rbind(glm_auc_ct201945, rf_auc_ct201945)
-colnames(auc_ct_201945) <- c("AUC", "StdDev")
-rownames(auc_ct_201945) <-c("GLM", "Rf")
-
-write.csv(auc_ct_201945_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201945_h2o.csv")
-write.csv(auc_ct_201945, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201945.csv")
+aucct_201945 <- rbind(glm_auc_ct201945, glm_auc_ct201945_h2o, rf_auc_ct201945,rf_auc_ct201945_h2o)
+colnames(aucct_201945) <- c("AUC", "StdDev")
+rownames(aucct_201945) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucct_201945, "C:/Users/nooni/Box/RNR597_data/AUC/aucct_201945.csv")
 
 
 
@@ -1487,16 +1390,10 @@ rf_auc_ct202119 <- PresenceAbsence ::auc(rf_DFauc_ct202119, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_ct_202119_h2o <- rbind(glm_auc_ct202119_h2o, rf_auc_ct202119_h2o)
-colnames(auc_ct_202119_h2o) <- c("AUC", "StdDev")
-rownames(auc_ct_202119_h2o) <-c("GLM", "Rf")
-
-auc_ct_202119 <- rbind(glm_auc_ct202119, rf_auc_ct202119)
-colnames(auc_ct_202119) <- c("AUC", "StdDev")
-rownames(auc_ct_202119) <-c("GLM", "Rf")
-
-write.csv(auc_ct_202119_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202119_h2o.csv")
-write.csv(auc_ct_202119, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202119.csv")
+aucct_202119 <- rbind(glm_auc_ct202119, glm_auc_ct202119_h2o, rf_auc_ct202119, rf_auc_ct202119_h2o)
+colnames(aucct_202119) <- c("AUC", "StdDev")
+rownames(aucct_202119) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucct_202119, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct202119.csv")
 
 
 
@@ -1527,16 +1424,10 @@ rf_auc_ct202132 <- PresenceAbsence ::auc(rf_DFauc_ct202132, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_ct_202132_h2o <- rbind(glm_auc_ct202132_h2o, rf_auc_ct202132_h2o)
-colnames(auc_ct_202132_h2o) <- c("AUC", "StdDev")
-rownames(auc_ct_202132_h2o) <-c("GLM", "Rf")
-
-auc_ct_202132 <- rbind(glm_auc_ct202132, rf_auc_ct202132)
-colnames(auc_ct_202132) <- c("AUC", "StdDev")
-rownames(auc_ct_202132) <-c("GLM", "Rf")
-
-write.csv(auc_ct_202132_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202132_h2o.csv")
-write.csv(auc_ct_202132, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202132.csv")
+aucct_202132 <- rbind(glm_auc_ct202132, glm_auc_ct202132_h2o, rf_auc_ct202132, rf_auc_ct202132_h2o)
+colnames(aucct_202132) <- c("AUC", "StdDev")
+rownames(aucct_202132) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucct_202132, "C:/Users/nooni/Box/RNR597_data/AUC/aucct_202132.csv")
 
 
 
@@ -1567,20 +1458,13 @@ rf_auc_ct202145 <- PresenceAbsence ::auc(rf_DFauc_ct202145, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_ct_202145_h2o <- rbind(glm_auc_ct202145_h2o, rf_auc_ct202145_h2o)
-colnames(auc_ct_202145_h2o) <- c("AUC", "StdDev")
-rownames(auc_ct_202145_h2o) <-c("GLM", "Rf")
-
-auc_ct_202145 <- rbind(glm_auc_ct202145, rf_auc_ct202145)
-colnames(auc_ct_202145) <- c("AUC", "StdDev")
-rownames(auc_ct_202145) <-c("GLM", "Rf")
-
-write.csv(auc_ct_202145_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202145_h2o.csv")
-write.csv(auc_ct_202145, "C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202145.csv")
-
-
+aucct_202145 <- rbind(glm_auc_ct202145, glm_auc_ct202145_h2o, rf_auc_ct202145, rf_auc_ct202145_h2o)
+colnames(aucct_202145) <- c("AUC", "StdDev")
+rownames(aucct_202145) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucct_202145, "C:/Users/nooni/Box/RNR597_data/AUC/aucct_202145.csv")
 
 ```
+
 
 AUC aa
 ```{r}
@@ -1617,17 +1501,10 @@ rf_auc_aa201319 <- PresenceAbsence ::auc(rf_DFauc_aa201319, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_aa_201319_h2o <- rbind(glm_auc_aa201319_h2o, rf_auc_aa201319_h2o)
-colnames(auc_aa_201319_h2o) <- c("AUC", "StdDev")
-rownames(auc_aa_201319_h2o) <-c("GLM", "Rf")
-
-auc_aa_201319 <- rbind(glm_auc_aa201319, rf_auc_aa201319)
-colnames(auc_aa_201319) <- c("AUC", "StdDev")
-rownames(auc_aa_201319) <-c("GLM", "Rf")
-
-write.csv(auc_aa_201319_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201319_h2o.csv")
-write.csv(auc_aa_201319, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201319.csv")
-
+aucaa_201319 <- rbind(glm_auc_aa201319, glm_auc_aa201319_h2o, rf_auc_aa201319, rf_auc_aa201319_h2o)
+colnames(aucaa_201319) <- c("AUC", "StdDev")
+rownames(aucaa_201319) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucaa_201319, "C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201319.csv")
 
 
 #**YW201332**
@@ -1657,16 +1534,10 @@ rf_auc_aa201332 <- PresenceAbsence ::auc(rf_DFauc_aa201332, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_aa_201332_h2o <- rbind(glm_auc_aa201332_h2o, rf_auc_aa201332_h2o)
-colnames(auc_aa_201332_h2o) <- c("AUC", "StdDev")
-rownames(auc_aa_201332_h2o) <-c("GLM", "Rf")
-
-auc_aa_201332 <- rbind(glm_auc_aa201332, rf_auc_aa201332)
-colnames(auc_aa_201332) <- c("AUC", "StdDev")
-rownames(auc_aa_201332) <-c("GLM", "Rf")
-
-write.csv(auc_aa_201332_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201332_h2o.csv")
-write.csv(auc_aa_201332, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201332.csv")
+aucaa_201332 <- rbind(glm_auc_aa201332, glm_auc_aa201332_h2o, rf_auc_aa201332_h2o, rf_auc_aa201332)
+colnames(aucaa_201332) <- c("AUC", "StdDev")
+rownames(aucaa_201332) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucaa_201332, "C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201332.csv")
 
 
 
@@ -1697,16 +1568,11 @@ rf_auc_aa201345 <- PresenceAbsence ::auc(rf_DFauc_aa201345, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_aa_201345_h2o <- rbind(glm_auc_aa201345_h2o, rf_auc_aa201345_h2o)
-colnames(auc_aa_201345_h2o) <- c("AUC", "StdDev")
-rownames(auc_aa_201345_h2o) <-c("GLM", "Rf")
+aucaa_201345 <- rbind(glm_auc_aa201345, glm_auc_aa201345_h2o, rf_auc_aa201345, rf_auc_aa201345_h2o)
+colnames(aucaa_201345) <- c("AUC", "StdDev")
+rownames(aucaa_201345) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucaa_201345, "C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201345.csv")
 
-auc_aa_201345 <- rbind(glm_auc_aa201345, rf_auc_aa201345)
-colnames(auc_aa_201345) <- c("AUC", "StdDev")
-rownames(auc_aa_201345) <-c("GLM", "Rf")
-
-write.csv(auc_aa_201345_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201345_h2o.csv")
-write.csv(auc_aa_201345, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201345.csv")
 
 
 #**YW201919**
@@ -1736,16 +1602,10 @@ rf_auc_aa201919 <- PresenceAbsence ::auc(rf_DFauc_aa201919, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_aa_201919_h2o <- rbind(glm_auc_aa201919_h2o, rf_auc_aa201919_h2o)
-colnames(auc_aa_201919_h2o) <- c("AUC", "StdDev")
-rownames(auc_aa_201919_h2o) <-c("GLM", "Rf")
-
-auc_aa_201919 <- rbind(glm_auc_aa201919, rf_auc_aa201919)
-colnames(auc_aa_201919) <- c("AUC", "StdDev")
-rownames(auc_aa_201919) <-c("GLM", "Rf")
-
-write.csv(auc_aa_201919_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201919_h2o.csv")
-write.csv(auc_aa_201919, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201919.csv")
+aucaa_201919 <- rbind(glm_auc_aa201919, glm_auc_aa201919_h2o, rf_auc_aa201919, rf_auc_aa201919_h2o)
+colnames(aucaa_201919) <- c("AUC", "StdDev")
+rownames(aucaa_201919) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucaa_201919, "C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201919.csv")
 
 
 
@@ -1776,16 +1636,10 @@ rf_auc_aa201932 <- PresenceAbsence ::auc(rf_DFauc_aa201932, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_aa_201932_h2o <- rbind(glm_auc_aa201932_h2o, rf_auc_aa201932_h2o)
-colnames(auc_aa_201932_h2o) <- c("AUC", "StdDev")
-rownames(auc_aa_201932_h2o) <-c("GLM", "Rf")
-
-auc_aa_201932 <- rbind(glm_auc_aa201932, rf_auc_aa201932)
-colnames(auc_aa_201932) <- c("AUC", "StdDev")
-rownames(auc_aa_201932) <-c("GLM", "Rf")
-
-write.csv(auc_aa_201932_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201932_h2o.csv")
-write.csv(auc_aa_201932, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201932.csv")
+aucaa_201932 <- rbind(glm_auc_aa201932,glm_auc_aa201932_h2o, rf_auc_aa201932, rf_auc_aa201932_h2o)
+colnames(aucaa_201932) <- c("AUC", "StdDev")
+rownames(aucaa_201932) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucaa_201932, "C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201932.csv")
 
 
 
@@ -1816,16 +1670,10 @@ rf_auc_aa201945 <- PresenceAbsence ::auc(rf_DFauc_aa201945, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_aa_201945_h2o <- rbind(glm_auc_aa201945_h2o, rf_auc_aa201945_h2o)
-colnames(auc_aa_201945_h2o) <- c("AUC", "StdDev")
-rownames(auc_aa_201945_h2o) <-c("GLM", "Rf")
-
-auc_aa_201945 <- rbind(glm_auc_aa201945, rf_auc_aa201945)
-colnames(auc_aa_201945) <- c("AUC", "StdDev")
-rownames(auc_aa_201945) <-c("GLM", "Rf")
-
-write.csv(auc_aa_201945_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201945_h2o.csv")
-write.csv(auc_aa_201945, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201945.csv")
+aucaa_201945 <- rbind(glm_auc_aa201945, glm_auc_aa201945_h2o, rf_auc_aa201945,rf_auc_aa201945_h2o)
+colnames(aucaa_201945) <- c("AUC", "StdDev")
+rownames(aucaa_201945) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucaa_201945, "C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201945.csv")
 
 
 
@@ -1856,16 +1704,10 @@ rf_auc_aa202119 <- PresenceAbsence ::auc(rf_DFauc_aa202119, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_aa_202119_h2o <- rbind(glm_auc_aa202119_h2o, rf_auc_aa202119_h2o)
-colnames(auc_aa_202119_h2o) <- c("AUC", "StdDev")
-rownames(auc_aa_202119_h2o) <-c("GLM", "Rf")
-
-auc_aa_202119 <- rbind(glm_auc_aa202119, rf_auc_aa202119)
-colnames(auc_aa_202119) <- c("AUC", "StdDev")
-rownames(auc_aa_202119) <-c("GLM", "Rf")
-
-write.csv(auc_aa_202119_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202119_h2o.csv")
-write.csv(auc_aa_202119, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202119.csv")
+aucaa_202119 <- rbind(glm_auc_aa202119, glm_auc_aa202119_h2o, rf_auc_aa202119, rf_auc_aa202119_h2o)
+colnames(aucaa_202119) <- c("AUC", "StdDev")
+rownames(aucaa_202119) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucaa_202119, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa202119.csv")
 
 
 
@@ -1896,16 +1738,10 @@ rf_auc_aa202132 <- PresenceAbsence ::auc(rf_DFauc_aa202132, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_aa_202132_h2o <- rbind(glm_auc_aa202132_h2o, rf_auc_aa202132_h2o)
-colnames(auc_aa_202132_h2o) <- c("AUC", "StdDev")
-rownames(auc_aa_202132_h2o) <-c("GLM", "Rf")
-
-auc_aa_202132 <- rbind(glm_auc_aa202132, rf_auc_aa202132)
-colnames(auc_aa_202132) <- c("AUC", "StdDev")
-rownames(auc_aa_202132) <-c("GLM", "Rf")
-
-write.csv(auc_aa_202132_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202132_h2o.csv")
-write.csv(auc_aa_202132, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202132.csv")
+aucaa_202132 <- rbind(glm_auc_aa202132, glm_auc_aa202132_h2o, rf_auc_aa202132, rf_auc_aa202132_h2o)
+colnames(aucaa_202132) <- c("AUC", "StdDev")
+rownames(aucaa_202132) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucaa_202132, "C:/Users/nooni/Box/RNR597_data/AUC/aucaa_202132.csv")
 
 
 
@@ -1936,20 +1772,13 @@ rf_auc_aa202145 <- PresenceAbsence ::auc(rf_DFauc_aa202145, which.model = TRUE, 
 
 
 ##**AUC Dataframe**
-auc_aa_202145_h2o <- rbind(glm_auc_aa202145_h2o, rf_auc_aa202145_h2o)
-colnames(auc_aa_202145_h2o) <- c("AUC", "StdDev")
-rownames(auc_aa_202145_h2o) <-c("GLM", "Rf")
-
-auc_aa_202145 <- rbind(glm_auc_aa202145, rf_auc_aa202145)
-colnames(auc_aa_202145) <- c("AUC", "StdDev")
-rownames(auc_aa_202145) <-c("GLM", "Rf")
-
-write.csv(auc_aa_202145_h2o, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202145_h2o.csv")
-write.csv(auc_aa_202145, "C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202145.csv")
-
-
+aucaa_202145 <- rbind(glm_auc_aa202145, glm_auc_aa202145_h2o, rf_auc_aa202145, rf_auc_aa202145_h2o)
+colnames(aucaa_202145) <- c("AUC", "StdDev")
+rownames(aucaa_202145) <-c("GLM","GLM_h2o", "Rf", "RF_H2o")
+write.csv(aucaa_202145, "C:/Users/nooni/Box/RNR597_data/AUC/aucaa_202145.csv")
 
 ```
+
 
 
 Ensemble Model -cq
@@ -1960,15 +1789,16 @@ cq201319_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201319_glm.tif
 cq201319_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201319_h2o_glm.tif")
 cq201319_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201319_rf.tif")
 cq201319_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201319_h2o_rf.tif")
-auc_cq_201319 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201319.csv")
-auc_cq_201319_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201319_h2o.csv")
+auccq_201319 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auccq_201319.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_cq201319 <- stack(x = c(cq201319_glm, cq201319_rf))
-weights_cq201319 <- auc_cq_201319$AUC / sum(auc_cq_201319$AUC)
+auc_cq201319 <- auccq_201319[c(1,3) ,]
+weights_cq201319 <- auc_cq201319$AUC / sum(auc_cq201319$AUC)
 ensemble_pred_cq201319 <- weighted.mean(pred_stack_cq201319, w = weights_cq201319)
 plot(ensemble_pred_cq201319)
-writeRaster(ensemble_pred_cq201319, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201319.tif")
+writeRaster(ensemble_pred_cq201319, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201319.tif",)
 
 #using test data now to get AUC 
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -1977,15 +1807,14 @@ test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201319 <- extract(ensemble_pred_cq201319, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201319 <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201319)
 auc_ensemble_cq201319<- PresenceAbsence ::auc(ensemble_auc_df_cq201319, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201319, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201319.csv")
 
 #h2o
 pred_stack_cq201319_h2o <- stack(x = c(cq201319_h2o_glm, cq201319_h2o_rf))
+auc_cq_201319_h2o <- auccq_201319[c(2,4) ,]
 weights_cq201319_h2o <- auc_cq_201319_h2o$AUC / sum(auc_cq_201319_h2o$AUC)
-
 ensemble_pred_cq201319_h2o <- weighted.mean(pred_stack_cq201319_h2o, w = weights_cq201319_h2o)
 plot(ensemble_pred_cq201319_h2o)
-writeRaster(ensemble_pred_cq201319_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201319_h2o.tif")
+writeRaster(ensemble_pred_cq201319_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201319_h2o.tif")
 
 #using test data now to get AUC
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -1993,23 +1822,28 @@ test_coords_cq <- test_data_cq[, c("Longitude", "Latitude")]
 test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201319_h2o <- extract(ensemble_pred_cq201319_h2o, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201319_h2o <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201319_h2o)
-auc_ensemble_cq201319_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201319, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201319_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201319_h2o.csv")
+auc_ensemble_cq201319_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201319_h2o, which.model = 1, na.rm = TRUE)
+
+cq201319_AUC_FINAL<- rbind(auc_ensemble_cq201319, auc_ensemble_cq201319_h2o)
+row.names(cq201319_AUC_FINAL) <- c("no_water", "water")
+write.csv(cq201319_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/cq201319_AUC.csv")
+
 
 #**YW201332*
 cq201332_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201332_glm.tif")
 cq201332_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201332_h2o_glm.tif")
 cq201332_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201332_rf.tif")
 cq201332_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201332_h2o_rf.tif")
-auc_cq_201332 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201332.csv")
-auc_cq_201332_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201332_h2o.csv")
+auccq_201332 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auccq_201332.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_cq201332 <- stack(x = c(cq201332_glm, cq201332_rf))
-weights_cq201332 <- auc_cq_201332$AUC / sum(auc_cq_201332$AUC)
+auc_cq201332 <- auccq_201332[c(1,3) ,]
+weights_cq201332 <- auc_cq201332$AUC / sum(auc_cq201332$AUC)
 ensemble_pred_cq201332 <- weighted.mean(pred_stack_cq201332, w = weights_cq201332)
 plot(ensemble_pred_cq201332)
-writeRaster(ensemble_pred_cq201332, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201332.tif")
+writeRaster(ensemble_pred_cq201332, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201332.tif",)
 
 #using test data now to get AUC 
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2018,15 +1852,14 @@ test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201332 <- extract(ensemble_pred_cq201332, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201332 <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201332)
 auc_ensemble_cq201332<- PresenceAbsence ::auc(ensemble_auc_df_cq201332, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201332, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201332.csv")
 
 #h2o
 pred_stack_cq201332_h2o <- stack(x = c(cq201332_h2o_glm, cq201332_h2o_rf))
+auc_cq_201332_h2o <- auccq_201332[c(2,4) ,]
 weights_cq201332_h2o <- auc_cq_201332_h2o$AUC / sum(auc_cq_201332_h2o$AUC)
-
 ensemble_pred_cq201332_h2o <- weighted.mean(pred_stack_cq201332_h2o, w = weights_cq201332_h2o)
 plot(ensemble_pred_cq201332_h2o)
-writeRaster(ensemble_pred_cq201332_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201332_h2o.tif")
+writeRaster(ensemble_pred_cq201332_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201332_h2o.tif")
 
 #using test data now to get AUC
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2034,8 +1867,12 @@ test_coords_cq <- test_data_cq[, c("Longitude", "Latitude")]
 test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201332_h2o <- extract(ensemble_pred_cq201332_h2o, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201332_h2o <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201332_h2o)
-auc_ensemble_cq201332_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201332, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201332_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201332_h2o.csv")
+auc_ensemble_cq201332_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201332_h2o, which.model = 1, na.rm = TRUE)
+
+cq201332_AUC_FINAL<- rbind(auc_ensemble_cq201332, auc_ensemble_cq201332_h2o)
+row.names(cq201332_AUC_FINAL) <- c("no_water", "water")
+write.csv(cq201332_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/cq201332_AUC.csv")
+
 
 
 #**YW201345*
@@ -2043,15 +1880,16 @@ cq201345_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201345_glm.tif
 cq201345_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201345_h2o_glm.tif")
 cq201345_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201345_rf.tif")
 cq201345_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201345_h2o_rf.tif")
-auc_cq_201345 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201345.csv")
-auc_cq_201345_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201345_h2o.csv")
+auccq_201345 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auccq_201345.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_cq201345 <- stack(x = c(cq201345_glm, cq201345_rf))
-weights_cq201345 <- auc_cq_201345$AUC / sum(auc_cq_201345$AUC)
+auc_cq201345 <- auccq_201345[c(1,3) ,]
+weights_cq201345 <- auc_cq201345$AUC / sum(auc_cq201345$AUC)
 ensemble_pred_cq201345 <- weighted.mean(pred_stack_cq201345, w = weights_cq201345)
 plot(ensemble_pred_cq201345)
-writeRaster(ensemble_pred_cq201345, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201345.tif")
+writeRaster(ensemble_pred_cq201345, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201345.tif",)
 
 #using test data now to get AUC 
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2060,15 +1898,14 @@ test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201345 <- extract(ensemble_pred_cq201345, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201345 <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201345)
 auc_ensemble_cq201345<- PresenceAbsence ::auc(ensemble_auc_df_cq201345, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201345, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201345.csv")
 
 #h2o
 pred_stack_cq201345_h2o <- stack(x = c(cq201345_h2o_glm, cq201345_h2o_rf))
+auc_cq_201345_h2o <- auccq_201345[c(2,4) ,]
 weights_cq201345_h2o <- auc_cq_201345_h2o$AUC / sum(auc_cq_201345_h2o$AUC)
-
 ensemble_pred_cq201345_h2o <- weighted.mean(pred_stack_cq201345_h2o, w = weights_cq201345_h2o)
 plot(ensemble_pred_cq201345_h2o)
-writeRaster(ensemble_pred_cq201345_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201345_h2o.tif")
+writeRaster(ensemble_pred_cq201345_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201345_h2o.tif")
 
 #using test data now to get AUC
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2076,24 +1913,28 @@ test_coords_cq <- test_data_cq[, c("Longitude", "Latitude")]
 test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201345_h2o <- extract(ensemble_pred_cq201345_h2o, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201345_h2o <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201345_h2o)
-auc_ensemble_cq201345_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201345, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201345_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201345_h2o.csv")
+auc_ensemble_cq201345_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201345_h2o, which.model = 1, na.rm = TRUE)
+
+cq201345_AUC_FINAL<- rbind(auc_ensemble_cq201345, auc_ensemble_cq201345_h2o)
+row.names(cq201345_AUC_FINAL) <- c("no_water", "water")
+write.csv(cq201345_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/cq201345_AUC.csv")
 
 
-#YW201919
+#**YW201919*
 cq201919_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201919_glm.tif")
 cq201919_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201919_h2o_glm.tif")
 cq201919_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201919_rf.tif")
 cq201919_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201919_h2o_rf.tif")
-auc_cq_201919 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201919.csv")
-auc_cq_201919_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201919_h2o.csv")
+auccq_201919 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auccq_201919.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_cq201919 <- stack(x = c(cq201919_glm, cq201919_rf))
-weights_cq201919 <- auc_cq_201919$AUC / sum(auc_cq_201919$AUC)
+auc_cq201919 <- auccq_201919[c(1,3) ,]
+weights_cq201919 <- auc_cq201919$AUC / sum(auc_cq201919$AUC)
 ensemble_pred_cq201919 <- weighted.mean(pred_stack_cq201919, w = weights_cq201919)
 plot(ensemble_pred_cq201919)
-writeRaster(ensemble_pred_cq201919, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201919.tif")
+writeRaster(ensemble_pred_cq201919, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201919.tif",)
 
 #using test data now to get AUC 
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2102,15 +1943,14 @@ test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201919 <- extract(ensemble_pred_cq201919, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201919 <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201919)
 auc_ensemble_cq201919<- PresenceAbsence ::auc(ensemble_auc_df_cq201919, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201919, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201919.csv")
 
 #h2o
 pred_stack_cq201919_h2o <- stack(x = c(cq201919_h2o_glm, cq201919_h2o_rf))
+auc_cq_201919_h2o <- auccq_201919[c(2,4) ,]
 weights_cq201919_h2o <- auc_cq_201919_h2o$AUC / sum(auc_cq_201919_h2o$AUC)
-
 ensemble_pred_cq201919_h2o <- weighted.mean(pred_stack_cq201919_h2o, w = weights_cq201919_h2o)
 plot(ensemble_pred_cq201919_h2o)
-writeRaster(ensemble_pred_cq201919_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201919_h2o.tif")
+writeRaster(ensemble_pred_cq201919_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201919_h2o.tif")
 
 #using test data now to get AUC
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2118,9 +1958,11 @@ test_coords_cq <- test_data_cq[, c("Longitude", "Latitude")]
 test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201919_h2o <- extract(ensemble_pred_cq201919_h2o, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201919_h2o <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201919_h2o)
-auc_ensemble_cq201919_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201919, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201919_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201919_h2o.csv")
+auc_ensemble_cq201919_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201919_h2o, which.model = 1, na.rm = TRUE)
 
+cq201919_AUC_FINAL<- rbind(auc_ensemble_cq201919, auc_ensemble_cq201919_h2o)
+row.names(cq201919_AUC_FINAL) <- c("no_water", "water")
+write.csv(cq201919_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/cq201919_AUC.csv")
 
 
 #**YW201932*
@@ -2128,15 +1970,16 @@ cq201932_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201932_glm.tif
 cq201932_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201932_h2o_glm.tif")
 cq201932_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201932_rf.tif")
 cq201932_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201932_h2o_rf.tif")
-auc_cq_201932 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201932.csv")
-auc_cq_201932_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201932_h2o.csv")
+auccq_201932 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auccq_201932.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_cq201932 <- stack(x = c(cq201932_glm, cq201932_rf))
-weights_cq201932 <- auc_cq_201932$AUC / sum(auc_cq_201932$AUC)
+auc_cq201932 <- auccq_201932[c(1,3) ,]
+weights_cq201932 <- auc_cq201932$AUC / sum(auc_cq201932$AUC)
 ensemble_pred_cq201932 <- weighted.mean(pred_stack_cq201932, w = weights_cq201932)
 plot(ensemble_pred_cq201932)
-writeRaster(ensemble_pred_cq201932, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201932.tif")
+writeRaster(ensemble_pred_cq201932, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201932.tif",)
 
 #using test data now to get AUC 
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2145,15 +1988,14 @@ test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201932 <- extract(ensemble_pred_cq201932, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201932 <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201932)
 auc_ensemble_cq201932<- PresenceAbsence ::auc(ensemble_auc_df_cq201932, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201932, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201932.csv")
 
 #h2o
 pred_stack_cq201932_h2o <- stack(x = c(cq201932_h2o_glm, cq201932_h2o_rf))
+auc_cq_201932_h2o <- auccq_201932[c(2,4) ,]
 weights_cq201932_h2o <- auc_cq_201932_h2o$AUC / sum(auc_cq_201932_h2o$AUC)
-
 ensemble_pred_cq201932_h2o <- weighted.mean(pred_stack_cq201932_h2o, w = weights_cq201932_h2o)
 plot(ensemble_pred_cq201932_h2o)
-writeRaster(ensemble_pred_cq201932_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201932_h2o.tif")
+writeRaster(ensemble_pred_cq201932_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201932_h2o.tif")
 
 #using test data now to get AUC
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2161,25 +2003,29 @@ test_coords_cq <- test_data_cq[, c("Longitude", "Latitude")]
 test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201932_h2o <- extract(ensemble_pred_cq201932_h2o, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201932_h2o <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201932_h2o)
-auc_ensemble_cq201932_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201932, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201932_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201932_h2o.csv")
+auc_ensemble_cq201932_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201932_h2o, which.model = 1, na.rm = TRUE)
+
+cq201932_AUC_FINAL<- rbind(auc_ensemble_cq201932, auc_ensemble_cq201932_h2o)
+row.names(cq201932_AUC_FINAL) <- c("no_water", "water")
+write.csv(cq201932_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/cq201932_AUC.csv")
 
 
 
-#**YW201945**
+#**YW201945*
 cq201945_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201945_glm.tif")
 cq201945_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201945_h2o_glm.tif")
 cq201945_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201945_rf.tif")
 cq201945_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq201945_h2o_rf.tif")
-auc_cq_201945 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201945.csv")
-auc_cq_201945_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_201945_h2o.csv")
+auccq_201945 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auccq_201945.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_cq201945 <- stack(x = c(cq201945_glm, cq201945_rf))
-weights_cq201945 <- auc_cq_201945$AUC / sum(auc_cq_201945$AUC)
+auc_cq201945 <- auccq_201945[c(1,3) ,]
+weights_cq201945 <- auc_cq201945$AUC / sum(auc_cq201945$AUC)
 ensemble_pred_cq201945 <- weighted.mean(pred_stack_cq201945, w = weights_cq201945)
 plot(ensemble_pred_cq201945)
-writeRaster(ensemble_pred_cq201945, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201945.tif")
+writeRaster(ensemble_pred_cq201945, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201945.tif",)
 
 #using test data now to get AUC 
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2188,15 +2034,14 @@ test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201945 <- extract(ensemble_pred_cq201945, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201945 <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201945)
 auc_ensemble_cq201945<- PresenceAbsence ::auc(ensemble_auc_df_cq201945, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201945, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201945.csv")
 
 #h2o
 pred_stack_cq201945_h2o <- stack(x = c(cq201945_h2o_glm, cq201945_h2o_rf))
+auc_cq_201945_h2o <- auccq_201945[c(2,4) ,]
 weights_cq201945_h2o <- auc_cq_201945_h2o$AUC / sum(auc_cq_201945_h2o$AUC)
-
 ensemble_pred_cq201945_h2o <- weighted.mean(pred_stack_cq201945_h2o, w = weights_cq201945_h2o)
 plot(ensemble_pred_cq201945_h2o)
-writeRaster(ensemble_pred_cq201945_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq201945_h2o.tif")
+writeRaster(ensemble_pred_cq201945_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq201945_h2o.tif")
 
 #using test data now to get AUC
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2204,9 +2049,11 @@ test_coords_cq <- test_data_cq[, c("Longitude", "Latitude")]
 test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq201945_h2o <- extract(ensemble_pred_cq201945_h2o, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq201945_h2o <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq201945_h2o)
-auc_ensemble_cq201945_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201945, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq201945_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq201945_h2o.csv")
+auc_ensemble_cq201945_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq201945_h2o, which.model = 1, na.rm = TRUE)
 
+cq201945_AUC_FINAL<- rbind(auc_ensemble_cq201945, auc_ensemble_cq201945_h2o)
+row.names(cq201945_AUC_FINAL) <- c("no_water", "water")
+write.csv(cq201945_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/cq201945_AUC.csv")
 
 
 #**YW202119*
@@ -2214,15 +2061,16 @@ cq202119_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202119_glm.tif
 cq202119_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202119_h2o_glm.tif")
 cq202119_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202119_rf.tif")
 cq202119_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202119_h2o_rf.tif")
-auc_cq_202119 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202119.csv")
-auc_cq_202119_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202119_h2o.csv")
+auccq_202119 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auccq_202119.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_cq202119 <- stack(x = c(cq202119_glm, cq202119_rf))
-weights_cq202119 <- auc_cq_202119$AUC / sum(auc_cq_202119$AUC)
+auc_cq202119 <- auccq_202119[c(1,3) ,]
+weights_cq202119 <- auc_cq202119$AUC / sum(auc_cq202119$AUC)
 ensemble_pred_cq202119 <- weighted.mean(pred_stack_cq202119, w = weights_cq202119)
 plot(ensemble_pred_cq202119)
-writeRaster(ensemble_pred_cq202119, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq202119.tif")
+writeRaster(ensemble_pred_cq202119, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq202119.tif",)
 
 #using test data now to get AUC 
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2231,15 +2079,14 @@ test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq202119 <- extract(ensemble_pred_cq202119, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq202119 <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq202119)
 auc_ensemble_cq202119<- PresenceAbsence ::auc(ensemble_auc_df_cq202119, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq202119, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq202119.csv")
 
 #h2o
 pred_stack_cq202119_h2o <- stack(x = c(cq202119_h2o_glm, cq202119_h2o_rf))
+auc_cq_202119_h2o <- auccq_202119[c(2,4) ,]
 weights_cq202119_h2o <- auc_cq_202119_h2o$AUC / sum(auc_cq_202119_h2o$AUC)
-
 ensemble_pred_cq202119_h2o <- weighted.mean(pred_stack_cq202119_h2o, w = weights_cq202119_h2o)
 plot(ensemble_pred_cq202119_h2o)
-writeRaster(ensemble_pred_cq202119_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq202119_h2o.tif")
+writeRaster(ensemble_pred_cq202119_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq202119_h2o.tif")
 
 #using test data now to get AUC
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2247,8 +2094,11 @@ test_coords_cq <- test_data_cq[, c("Longitude", "Latitude")]
 test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq202119_h2o <- extract(ensemble_pred_cq202119_h2o, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq202119_h2o <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq202119_h2o)
-auc_ensemble_cq202119_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq202119, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq202119_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq202119_h2o.csv")
+auc_ensemble_cq202119_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq202119_h2o, which.model = 1, na.rm = TRUE)
+
+cq202119_AUC_FINAL<- rbind(auc_ensemble_cq202119, auc_ensemble_cq202119_h2o)
+row.names(cq202119_AUC_FINAL) <- c("no_water", "water")
+write.csv(cq202119_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/cq202119_AUC.csv")
 
 
 #**YW202132*
@@ -2256,15 +2106,16 @@ cq202132_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202132_glm.tif
 cq202132_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202132_h2o_glm.tif")
 cq202132_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202132_rf.tif")
 cq202132_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202132_h2o_rf.tif")
-auc_cq_202132 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202132.csv")
-auc_cq_202132_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202132_h2o.csv")
+auccq_202132 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auccq_202132.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_cq202132 <- stack(x = c(cq202132_glm, cq202132_rf))
-weights_cq202132 <- auc_cq_202132$AUC / sum(auc_cq_202132$AUC)
+auc_cq202132 <- auccq_202132[c(1,3) ,]
+weights_cq202132 <- auc_cq202132$AUC / sum(auc_cq202132$AUC)
 ensemble_pred_cq202132 <- weighted.mean(pred_stack_cq202132, w = weights_cq202132)
 plot(ensemble_pred_cq202132)
-writeRaster(ensemble_pred_cq202132, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq202132.tif")
+writeRaster(ensemble_pred_cq202132, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq202132.tif",)
 
 #using test data now to get AUC 
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2273,15 +2124,14 @@ test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq202132 <- extract(ensemble_pred_cq202132, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq202132 <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq202132)
 auc_ensemble_cq202132<- PresenceAbsence ::auc(ensemble_auc_df_cq202132, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq202132, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq202132.csv")
 
 #h2o
 pred_stack_cq202132_h2o <- stack(x = c(cq202132_h2o_glm, cq202132_h2o_rf))
+auc_cq_202132_h2o <- auccq_202132[c(2,4) ,]
 weights_cq202132_h2o <- auc_cq_202132_h2o$AUC / sum(auc_cq_202132_h2o$AUC)
-
 ensemble_pred_cq202132_h2o <- weighted.mean(pred_stack_cq202132_h2o, w = weights_cq202132_h2o)
 plot(ensemble_pred_cq202132_h2o)
-writeRaster(ensemble_pred_cq202132_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq202132_h2o.tif")
+writeRaster(ensemble_pred_cq202132_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq202132_h2o.tif")
 
 #using test data now to get AUC
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2289,8 +2139,12 @@ test_coords_cq <- test_data_cq[, c("Longitude", "Latitude")]
 test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq202132_h2o <- extract(ensemble_pred_cq202132_h2o, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq202132_h2o <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq202132_h2o)
-auc_ensemble_cq202132_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq202132, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq202132_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq202132_h2o.csv")
+auc_ensemble_cq202132_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq202132_h2o, which.model = 1, na.rm = TRUE)
+
+cq202132_AUC_FINAL<- rbind(auc_ensemble_cq202132, auc_ensemble_cq202132_h2o)
+row.names(cq202132_AUC_FINAL) <- c("no_water", "water")
+write.csv(cq202132_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/cq202132_AUC.csv")
+
 
 
 #**YW202145*
@@ -2298,15 +2152,16 @@ cq202145_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202145_glm.tif
 cq202145_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202145_h2o_glm.tif")
 cq202145_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202145_rf.tif")
 cq202145_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/cq202145_h2o_rf.tif")
-auc_cq_202145 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202145.csv")
-auc_cq_202145_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_cq_202145_h2o.csv")
+auccq_202145 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auccq_202145.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_cq202145 <- stack(x = c(cq202145_glm, cq202145_rf))
-weights_cq202145 <- auc_cq_202145$AUC / sum(auc_cq_202145$AUC)
+auc_cq202145 <- auccq_202145[c(1,3) ,]
+weights_cq202145 <- auc_cq202145$AUC / sum(auc_cq202145$AUC)
 ensemble_pred_cq202145 <- weighted.mean(pred_stack_cq202145, w = weights_cq202145)
 plot(ensemble_pred_cq202145)
-writeRaster(ensemble_pred_cq202145, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq202145.tif")
+writeRaster(ensemble_pred_cq202145, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq202145.tif",)
 
 #using test data now to get AUC 
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2315,15 +2170,14 @@ test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq202145 <- extract(ensemble_pred_cq202145, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq202145 <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq202145)
 auc_ensemble_cq202145<- PresenceAbsence ::auc(ensemble_auc_df_cq202145, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq202145, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq202145.csv")
 
 #h2o
 pred_stack_cq202145_h2o <- stack(x = c(cq202145_h2o_glm, cq202145_h2o_rf))
+auc_cq_202145_h2o <- auccq_202145[c(2,4) ,]
 weights_cq202145_h2o <- auc_cq_202145_h2o$AUC / sum(auc_cq_202145_h2o$AUC)
-
 ensemble_pred_cq202145_h2o <- weighted.mean(pred_stack_cq202145_h2o, w = weights_cq202145_h2o)
 plot(ensemble_pred_cq202145_h2o)
-writeRaster(ensemble_pred_cq202145_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_cq202145_h2o.tif")
+writeRaster(ensemble_pred_cq202145_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_cq202145_h2o.tif")
 
 #using test data now to get AUC
 test_data_cq <- read.csv(here("Natalie/data_cleaned/test_train/test_data_cq.csv"))
@@ -2331,30 +2185,33 @@ test_coords_cq <- test_data_cq[, c("Longitude", "Latitude")]
 test_presence_cq <- as.numeric(test_data_cq$cq)
 ensemble_test_pred_cq202145_h2o <- extract(ensemble_pred_cq202145_h2o, test_coords_cq, pos_label = 1)
 ensemble_auc_df_cq202145_h2o <- data.frame(test_data_cq$X, test_presence_cq, ensemble_test_pred_cq202145_h2o)
-auc_ensemble_cq202145_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq202145, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_cq202145_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_cq202145_h2o.csv")
+auc_ensemble_cq202145_h2o<- PresenceAbsence ::auc(ensemble_auc_df_cq202145_h2o, which.model = 1, na.rm = TRUE)
+
+cq202145_AUC_FINAL<- rbind(auc_ensemble_cq202145, auc_ensemble_cq202145_h2o)
+row.names(cq202145_AUC_FINAL) <- c("no_water", "water")
+write.csv(cq202145_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/cq202145_AUC.csv")
 
 
 ```
 
 
-Ensemble model - ct
+Ensemble ct
 ```{r}
-
 #**YW201319*
 ct201319_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201319_glm.tif")
 ct201319_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201319_h2o_glm.tif")
 ct201319_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201319_rf.tif")
 ct201319_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201319_h2o_rf.tif")
-auc_ct_201319 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201319.csv")
-auc_ct_201319_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201319_h2o.csv")
+aucct_201319 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucct_201319.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_ct201319 <- stack(x = c(ct201319_glm, ct201319_rf))
-weights_ct201319 <- auc_ct_201319$AUC / sum(auc_ct_201319$AUC)
+auc_ct201319 <- aucct_201319[c(1,3) ,]
+weights_ct201319 <- auc_ct201319$AUC / sum(auc_ct201319$AUC)
 ensemble_pred_ct201319 <- weighted.mean(pred_stack_ct201319, w = weights_ct201319)
 plot(ensemble_pred_ct201319)
-writeRaster(ensemble_pred_ct201319, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201319.tif")
+writeRaster(ensemble_pred_ct201319, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201319.tif",)
 
 #using test data now to get AUC 
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2363,15 +2220,14 @@ test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201319 <- extract(ensemble_pred_ct201319, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201319 <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201319)
 auc_ensemble_ct201319<- PresenceAbsence ::auc(ensemble_auc_df_ct201319, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201319, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201319.csv")
 
 #h2o
 pred_stack_ct201319_h2o <- stack(x = c(ct201319_h2o_glm, ct201319_h2o_rf))
+auc_ct_201319_h2o <- aucct_201319[c(2,4) ,]
 weights_ct201319_h2o <- auc_ct_201319_h2o$AUC / sum(auc_ct_201319_h2o$AUC)
-
 ensemble_pred_ct201319_h2o <- weighted.mean(pred_stack_ct201319_h2o, w = weights_ct201319_h2o)
 plot(ensemble_pred_ct201319_h2o)
-writeRaster(ensemble_pred_ct201319_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201319_h2o.tif")
+writeRaster(ensemble_pred_ct201319_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201319_h2o.tif")
 
 #using test data now to get AUC
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2379,23 +2235,28 @@ test_coords_ct <- test_data_ct[, c("Longitude", "Latitude")]
 test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201319_h2o <- extract(ensemble_pred_ct201319_h2o, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201319_h2o <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201319_h2o)
-auc_ensemble_ct201319_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201319, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201319_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201319_h2o.csv")
+auc_ensemble_ct201319_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201319_h2o, which.model = 1, na.rm = TRUE)
+
+ct201319_AUC_FINAL<- rbind(auc_ensemble_ct201319, auc_ensemble_ct201319_h2o)
+row.names(ct201319_AUC_FINAL) <- c("no_water", "water")
+write.csv(ct201319_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/ct201319_AUC.csv")
+
 
 #**YW201332*
 ct201332_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201332_glm.tif")
 ct201332_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201332_h2o_glm.tif")
 ct201332_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201332_rf.tif")
 ct201332_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201332_h2o_rf.tif")
-auc_ct_201332 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201332.csv")
-auc_ct_201332_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201332_h2o.csv")
+aucct_201332 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucct_201332.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_ct201332 <- stack(x = c(ct201332_glm, ct201332_rf))
-weights_ct201332 <- auc_ct_201332$AUC / sum(auc_ct_201332$AUC)
+auc_ct201332 <- aucct_201332[c(1,3) ,]
+weights_ct201332 <- auc_ct201332$AUC / sum(auc_ct201332$AUC)
 ensemble_pred_ct201332 <- weighted.mean(pred_stack_ct201332, w = weights_ct201332)
 plot(ensemble_pred_ct201332)
-writeRaster(ensemble_pred_ct201332, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201332.tif")
+writeRaster(ensemble_pred_ct201332, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201332.tif",)
 
 #using test data now to get AUC 
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2404,15 +2265,14 @@ test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201332 <- extract(ensemble_pred_ct201332, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201332 <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201332)
 auc_ensemble_ct201332<- PresenceAbsence ::auc(ensemble_auc_df_ct201332, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201332, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201332.csv")
 
 #h2o
 pred_stack_ct201332_h2o <- stack(x = c(ct201332_h2o_glm, ct201332_h2o_rf))
+auc_ct_201332_h2o <- aucct_201332[c(2,4) ,]
 weights_ct201332_h2o <- auc_ct_201332_h2o$AUC / sum(auc_ct_201332_h2o$AUC)
-
 ensemble_pred_ct201332_h2o <- weighted.mean(pred_stack_ct201332_h2o, w = weights_ct201332_h2o)
 plot(ensemble_pred_ct201332_h2o)
-writeRaster(ensemble_pred_ct201332_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201332_h2o.tif")
+writeRaster(ensemble_pred_ct201332_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201332_h2o.tif")
 
 #using test data now to get AUC
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2420,8 +2280,12 @@ test_coords_ct <- test_data_ct[, c("Longitude", "Latitude")]
 test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201332_h2o <- extract(ensemble_pred_ct201332_h2o, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201332_h2o <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201332_h2o)
-auc_ensemble_ct201332_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201332, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201332_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201332_h2o.csv")
+auc_ensemble_ct201332_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201332_h2o, which.model = 1, na.rm = TRUE)
+
+ct201332_AUC_FINAL<- rbind(auc_ensemble_ct201332, auc_ensemble_ct201332_h2o)
+row.names(ct201332_AUC_FINAL) <- c("no_water", "water")
+write.csv(ct201332_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/ct201332_AUC.csv")
+
 
 
 #**YW201345*
@@ -2429,15 +2293,16 @@ ct201345_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201345_glm.tif
 ct201345_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201345_h2o_glm.tif")
 ct201345_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201345_rf.tif")
 ct201345_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201345_h2o_rf.tif")
-auc_ct_201345 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201345.csv")
-auc_ct_201345_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201345_h2o.csv")
+aucct_201345 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucct_201345.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_ct201345 <- stack(x = c(ct201345_glm, ct201345_rf))
-weights_ct201345 <- auc_ct_201345$AUC / sum(auc_ct_201345$AUC)
+auc_ct201345 <- aucct_201345[c(1,3) ,]
+weights_ct201345 <- auc_ct201345$AUC / sum(auc_ct201345$AUC)
 ensemble_pred_ct201345 <- weighted.mean(pred_stack_ct201345, w = weights_ct201345)
 plot(ensemble_pred_ct201345)
-writeRaster(ensemble_pred_ct201345, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201345.tif")
+writeRaster(ensemble_pred_ct201345, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201345.tif",)
 
 #using test data now to get AUC 
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2446,15 +2311,14 @@ test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201345 <- extract(ensemble_pred_ct201345, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201345 <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201345)
 auc_ensemble_ct201345<- PresenceAbsence ::auc(ensemble_auc_df_ct201345, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201345, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201345.csv")
 
 #h2o
 pred_stack_ct201345_h2o <- stack(x = c(ct201345_h2o_glm, ct201345_h2o_rf))
+auc_ct_201345_h2o <- aucct_201345[c(2,4) ,]
 weights_ct201345_h2o <- auc_ct_201345_h2o$AUC / sum(auc_ct_201345_h2o$AUC)
-
 ensemble_pred_ct201345_h2o <- weighted.mean(pred_stack_ct201345_h2o, w = weights_ct201345_h2o)
 plot(ensemble_pred_ct201345_h2o)
-writeRaster(ensemble_pred_ct201345_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201345_h2o.tif")
+writeRaster(ensemble_pred_ct201345_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201345_h2o.tif")
 
 #using test data now to get AUC
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2462,24 +2326,28 @@ test_coords_ct <- test_data_ct[, c("Longitude", "Latitude")]
 test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201345_h2o <- extract(ensemble_pred_ct201345_h2o, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201345_h2o <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201345_h2o)
-auc_ensemble_ct201345_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201345, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201345_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201345_h2o.csv")
+auc_ensemble_ct201345_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201345_h2o, which.model = 1, na.rm = TRUE)
+
+ct201345_AUC_FINAL<- rbind(auc_ensemble_ct201345, auc_ensemble_ct201345_h2o)
+row.names(ct201345_AUC_FINAL) <- c("no_water", "water")
+write.csv(ct201345_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/ct201345_AUC.csv")
 
 
-#YW201919
+#**YW201919*
 ct201919_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201919_glm.tif")
 ct201919_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201919_h2o_glm.tif")
 ct201919_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201919_rf.tif")
 ct201919_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201919_h2o_rf.tif")
-auc_ct_201919 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201919.csv")
-auc_ct_201919_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201919_h2o.csv")
+aucct_201919 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucct_201919.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_ct201919 <- stack(x = c(ct201919_glm, ct201919_rf))
-weights_ct201919 <- auc_ct_201919$AUC / sum(auc_ct_201919$AUC)
+auc_ct201919 <- aucct_201919[c(1,3) ,]
+weights_ct201919 <- auc_ct201919$AUC / sum(auc_ct201919$AUC)
 ensemble_pred_ct201919 <- weighted.mean(pred_stack_ct201919, w = weights_ct201919)
 plot(ensemble_pred_ct201919)
-writeRaster(ensemble_pred_ct201919, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201919.tif")
+writeRaster(ensemble_pred_ct201919, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201919.tif",)
 
 #using test data now to get AUC 
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2488,15 +2356,14 @@ test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201919 <- extract(ensemble_pred_ct201919, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201919 <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201919)
 auc_ensemble_ct201919<- PresenceAbsence ::auc(ensemble_auc_df_ct201919, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201919, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201919.csv")
 
 #h2o
 pred_stack_ct201919_h2o <- stack(x = c(ct201919_h2o_glm, ct201919_h2o_rf))
+auc_ct_201919_h2o <- aucct_201919[c(2,4) ,]
 weights_ct201919_h2o <- auc_ct_201919_h2o$AUC / sum(auc_ct_201919_h2o$AUC)
-
 ensemble_pred_ct201919_h2o <- weighted.mean(pred_stack_ct201919_h2o, w = weights_ct201919_h2o)
 plot(ensemble_pred_ct201919_h2o)
-writeRaster(ensemble_pred_ct201919_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201919_h2o.tif")
+writeRaster(ensemble_pred_ct201919_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201919_h2o.tif")
 
 #using test data now to get AUC
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2504,9 +2371,11 @@ test_coords_ct <- test_data_ct[, c("Longitude", "Latitude")]
 test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201919_h2o <- extract(ensemble_pred_ct201919_h2o, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201919_h2o <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201919_h2o)
-auc_ensemble_ct201919_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201919, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201919_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201919_h2o.csv")
+auc_ensemble_ct201919_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201919_h2o, which.model = 1, na.rm = TRUE)
 
+ct201919_AUC_FINAL<- rbind(auc_ensemble_ct201919, auc_ensemble_ct201919_h2o)
+row.names(ct201919_AUC_FINAL) <- c("no_water", "water")
+write.csv(ct201919_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/ct201919_AUC.csv")
 
 
 #**YW201932*
@@ -2514,15 +2383,16 @@ ct201932_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201932_glm.tif
 ct201932_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201932_h2o_glm.tif")
 ct201932_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201932_rf.tif")
 ct201932_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201932_h2o_rf.tif")
-auc_ct_201932 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201932.csv")
-auc_ct_201932_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201932_h2o.csv")
+aucct_201932 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucct_201932.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_ct201932 <- stack(x = c(ct201932_glm, ct201932_rf))
-weights_ct201932 <- auc_ct_201932$AUC / sum(auc_ct_201932$AUC)
+auc_ct201932 <- aucct_201932[c(1,3) ,]
+weights_ct201932 <- auc_ct201932$AUC / sum(auc_ct201932$AUC)
 ensemble_pred_ct201932 <- weighted.mean(pred_stack_ct201932, w = weights_ct201932)
 plot(ensemble_pred_ct201932)
-writeRaster(ensemble_pred_ct201932, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201932.tif")
+writeRaster(ensemble_pred_ct201932, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201932.tif",)
 
 #using test data now to get AUC 
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2531,15 +2401,14 @@ test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201932 <- extract(ensemble_pred_ct201932, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201932 <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201932)
 auc_ensemble_ct201932<- PresenceAbsence ::auc(ensemble_auc_df_ct201932, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201932, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201932.csv")
 
 #h2o
 pred_stack_ct201932_h2o <- stack(x = c(ct201932_h2o_glm, ct201932_h2o_rf))
+auc_ct_201932_h2o <- aucct_201932[c(2,4) ,]
 weights_ct201932_h2o <- auc_ct_201932_h2o$AUC / sum(auc_ct_201932_h2o$AUC)
-
 ensemble_pred_ct201932_h2o <- weighted.mean(pred_stack_ct201932_h2o, w = weights_ct201932_h2o)
 plot(ensemble_pred_ct201932_h2o)
-writeRaster(ensemble_pred_ct201932_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201932_h2o.tif")
+writeRaster(ensemble_pred_ct201932_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201932_h2o.tif")
 
 #using test data now to get AUC
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2547,25 +2416,29 @@ test_coords_ct <- test_data_ct[, c("Longitude", "Latitude")]
 test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201932_h2o <- extract(ensemble_pred_ct201932_h2o, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201932_h2o <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201932_h2o)
-auc_ensemble_ct201932_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201932, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201932_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201932_h2o.csv")
+auc_ensemble_ct201932_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201932_h2o, which.model = 1, na.rm = TRUE)
+
+ct201932_AUC_FINAL<- rbind(auc_ensemble_ct201932, auc_ensemble_ct201932_h2o)
+row.names(ct201932_AUC_FINAL) <- c("no_water", "water")
+write.csv(ct201932_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/ct201932_AUC.csv")
 
 
 
-#**YW201945**
+#**YW201945*
 ct201945_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201945_glm.tif")
 ct201945_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201945_h2o_glm.tif")
 ct201945_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201945_rf.tif")
 ct201945_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct201945_h2o_rf.tif")
-auc_ct_201945 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201945.csv")
-auc_ct_201945_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_201945_h2o.csv")
+aucct_201945 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucct_201945.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_ct201945 <- stack(x = c(ct201945_glm, ct201945_rf))
-weights_ct201945 <- auc_ct_201945$AUC / sum(auc_ct_201945$AUC)
+auc_ct201945 <- aucct_201945[c(1,3) ,]
+weights_ct201945 <- auc_ct201945$AUC / sum(auc_ct201945$AUC)
 ensemble_pred_ct201945 <- weighted.mean(pred_stack_ct201945, w = weights_ct201945)
 plot(ensemble_pred_ct201945)
-writeRaster(ensemble_pred_ct201945, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201945.tif")
+writeRaster(ensemble_pred_ct201945, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201945.tif",)
 
 #using test data now to get AUC 
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2574,15 +2447,14 @@ test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201945 <- extract(ensemble_pred_ct201945, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201945 <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201945)
 auc_ensemble_ct201945<- PresenceAbsence ::auc(ensemble_auc_df_ct201945, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201945, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201945.csv")
 
 #h2o
 pred_stack_ct201945_h2o <- stack(x = c(ct201945_h2o_glm, ct201945_h2o_rf))
+auc_ct_201945_h2o <- aucct_201945[c(2,4) ,]
 weights_ct201945_h2o <- auc_ct_201945_h2o$AUC / sum(auc_ct_201945_h2o$AUC)
-
 ensemble_pred_ct201945_h2o <- weighted.mean(pred_stack_ct201945_h2o, w = weights_ct201945_h2o)
 plot(ensemble_pred_ct201945_h2o)
-writeRaster(ensemble_pred_ct201945_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct201945_h2o.tif")
+writeRaster(ensemble_pred_ct201945_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct201945_h2o.tif")
 
 #using test data now to get AUC
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2590,9 +2462,11 @@ test_coords_ct <- test_data_ct[, c("Longitude", "Latitude")]
 test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct201945_h2o <- extract(ensemble_pred_ct201945_h2o, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct201945_h2o <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct201945_h2o)
-auc_ensemble_ct201945_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201945, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct201945_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct201945_h2o.csv")
+auc_ensemble_ct201945_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct201945_h2o, which.model = 1, na.rm = TRUE)
 
+ct201945_AUC_FINAL<- rbind(auc_ensemble_ct201945, auc_ensemble_ct201945_h2o)
+row.names(ct201945_AUC_FINAL) <- c("no_water", "water")
+write.csv(ct201945_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/ct201945_AUC.csv")
 
 
 #**YW202119*
@@ -2600,15 +2474,16 @@ ct202119_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202119_glm.tif
 ct202119_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202119_h2o_glm.tif")
 ct202119_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202119_rf.tif")
 ct202119_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202119_h2o_rf.tif")
-auc_ct_202119 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202119.csv")
-auc_ct_202119_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202119_h2o.csv")
+aucct_202119 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct202119.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_ct202119 <- stack(x = c(ct202119_glm, ct202119_rf))
-weights_ct202119 <- auc_ct_202119$AUC / sum(auc_ct_202119$AUC)
+auc_ct202119 <- aucct_202119[c(1,3) ,]
+weights_ct202119 <- auc_ct202119$AUC / sum(auc_ct202119$AUC)
 ensemble_pred_ct202119 <- weighted.mean(pred_stack_ct202119, w = weights_ct202119)
 plot(ensemble_pred_ct202119)
-writeRaster(ensemble_pred_ct202119, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct202119.tif")
+writeRaster(ensemble_pred_ct202119, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct202119.tif",)
 
 #using test data now to get AUC 
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2617,15 +2492,14 @@ test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct202119 <- extract(ensemble_pred_ct202119, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct202119 <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct202119)
 auc_ensemble_ct202119<- PresenceAbsence ::auc(ensemble_auc_df_ct202119, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct202119, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct202119.csv")
 
 #h2o
 pred_stack_ct202119_h2o <- stack(x = c(ct202119_h2o_glm, ct202119_h2o_rf))
+auc_ct_202119_h2o <- aucct_202119[c(2,4) ,]
 weights_ct202119_h2o <- auc_ct_202119_h2o$AUC / sum(auc_ct_202119_h2o$AUC)
-
 ensemble_pred_ct202119_h2o <- weighted.mean(pred_stack_ct202119_h2o, w = weights_ct202119_h2o)
 plot(ensemble_pred_ct202119_h2o)
-writeRaster(ensemble_pred_ct202119_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct202119_h2o.tif")
+writeRaster(ensemble_pred_ct202119_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct202119_h2o.tif")
 
 #using test data now to get AUC
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2633,8 +2507,11 @@ test_coords_ct <- test_data_ct[, c("Longitude", "Latitude")]
 test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct202119_h2o <- extract(ensemble_pred_ct202119_h2o, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct202119_h2o <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct202119_h2o)
-auc_ensemble_ct202119_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct202119, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct202119_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct202119_h2o.csv")
+auc_ensemble_ct202119_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct202119_h2o, which.model = 1, na.rm = TRUE)
+
+ct202119_AUC_FINAL<- rbind(auc_ensemble_ct202119, auc_ensemble_ct202119_h2o)
+row.names(ct202119_AUC_FINAL) <- c("no_water", "water")
+write.csv(ct202119_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/ct202119_AUC.csv")
 
 
 #**YW202132*
@@ -2642,15 +2519,16 @@ ct202132_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202132_glm.tif
 ct202132_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202132_h2o_glm.tif")
 ct202132_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202132_rf.tif")
 ct202132_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202132_h2o_rf.tif")
-auc_ct_202132 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202132.csv")
-auc_ct_202132_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202132_h2o.csv")
+aucct_202132 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucct_202132.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_ct202132 <- stack(x = c(ct202132_glm, ct202132_rf))
-weights_ct202132 <- auc_ct_202132$AUC / sum(auc_ct_202132$AUC)
+auc_ct202132 <- aucct_202132[c(1,3) ,]
+weights_ct202132 <- auc_ct202132$AUC / sum(auc_ct202132$AUC)
 ensemble_pred_ct202132 <- weighted.mean(pred_stack_ct202132, w = weights_ct202132)
 plot(ensemble_pred_ct202132)
-writeRaster(ensemble_pred_ct202132, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct202132.tif")
+writeRaster(ensemble_pred_ct202132, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct202132.tif",)
 
 #using test data now to get AUC 
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2659,15 +2537,14 @@ test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct202132 <- extract(ensemble_pred_ct202132, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct202132 <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct202132)
 auc_ensemble_ct202132<- PresenceAbsence ::auc(ensemble_auc_df_ct202132, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct202132, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct202132.csv")
 
 #h2o
 pred_stack_ct202132_h2o <- stack(x = c(ct202132_h2o_glm, ct202132_h2o_rf))
+auc_ct_202132_h2o <- aucct_202132[c(2,4) ,]
 weights_ct202132_h2o <- auc_ct_202132_h2o$AUC / sum(auc_ct_202132_h2o$AUC)
-
 ensemble_pred_ct202132_h2o <- weighted.mean(pred_stack_ct202132_h2o, w = weights_ct202132_h2o)
 plot(ensemble_pred_ct202132_h2o)
-writeRaster(ensemble_pred_ct202132_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct202132_h2o.tif")
+writeRaster(ensemble_pred_ct202132_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct202132_h2o.tif")
 
 #using test data now to get AUC
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2675,8 +2552,12 @@ test_coords_ct <- test_data_ct[, c("Longitude", "Latitude")]
 test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct202132_h2o <- extract(ensemble_pred_ct202132_h2o, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct202132_h2o <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct202132_h2o)
-auc_ensemble_ct202132_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct202132, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct202132_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct202132_h2o.csv")
+auc_ensemble_ct202132_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct202132_h2o, which.model = 1, na.rm = TRUE)
+
+ct202132_AUC_FINAL<- rbind(auc_ensemble_ct202132, auc_ensemble_ct202132_h2o)
+row.names(ct202132_AUC_FINAL) <- c("no_water", "water")
+write.csv(ct202132_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/ct202132_AUC.csv")
+
 
 
 #**YW202145*
@@ -2684,15 +2565,16 @@ ct202145_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202145_glm.tif
 ct202145_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202145_h2o_glm.tif")
 ct202145_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202145_rf.tif")
 ct202145_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/ct202145_h2o_rf.tif")
-auc_ct_202145 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202145.csv")
-auc_ct_202145_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_ct_202145_h2o.csv")
+aucct_202145 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucct_202145.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_ct202145 <- stack(x = c(ct202145_glm, ct202145_rf))
-weights_ct202145 <- auc_ct_202145$AUC / sum(auc_ct_202145$AUC)
+auc_ct202145 <- aucct_202145[c(1,3) ,]
+weights_ct202145 <- auc_ct202145$AUC / sum(auc_ct202145$AUC)
 ensemble_pred_ct202145 <- weighted.mean(pred_stack_ct202145, w = weights_ct202145)
 plot(ensemble_pred_ct202145)
-writeRaster(ensemble_pred_ct202145, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct202145.tif")
+writeRaster(ensemble_pred_ct202145, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct202145.tif",)
 
 #using test data now to get AUC 
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2701,15 +2583,14 @@ test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct202145 <- extract(ensemble_pred_ct202145, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct202145 <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct202145)
 auc_ensemble_ct202145<- PresenceAbsence ::auc(ensemble_auc_df_ct202145, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct202145, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct202145.csv")
 
 #h2o
 pred_stack_ct202145_h2o <- stack(x = c(ct202145_h2o_glm, ct202145_h2o_rf))
+auc_ct_202145_h2o <- aucct_202145[c(2,4) ,]
 weights_ct202145_h2o <- auc_ct_202145_h2o$AUC / sum(auc_ct_202145_h2o$AUC)
-
 ensemble_pred_ct202145_h2o <- weighted.mean(pred_stack_ct202145_h2o, w = weights_ct202145_h2o)
 plot(ensemble_pred_ct202145_h2o)
-writeRaster(ensemble_pred_ct202145_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_ct202145_h2o.tif")
+writeRaster(ensemble_pred_ct202145_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_ct202145_h2o.tif")
 
 #using test data now to get AUC
 test_data_ct <- read.csv(here("Natalie/data_cleaned/test_train/test_data_ct.csv"))
@@ -2717,30 +2598,31 @@ test_coords_ct <- test_data_ct[, c("Longitude", "Latitude")]
 test_presence_ct <- as.numeric(test_data_ct$ct)
 ensemble_test_pred_ct202145_h2o <- extract(ensemble_pred_ct202145_h2o, test_coords_ct, pos_label = 1)
 ensemble_auc_df_ct202145_h2o <- data.frame(test_data_ct$X, test_presence_ct, ensemble_test_pred_ct202145_h2o)
-auc_ensemble_ct202145_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct202145, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_ct202145_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_ct202145_h2o.csv")
+auc_ensemble_ct202145_h2o<- PresenceAbsence ::auc(ensemble_auc_df_ct202145_h2o, which.model = 1, na.rm = TRUE)
 
-
+ct202145_AUC_FINAL<- rbind(auc_ensemble_ct202145, auc_ensemble_ct202145_h2o)
+row.names(ct202145_AUC_FINAL) <- c("no_water", "water")
+write.csv(ct202145_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/ct202145_AUC.csv")
 ```
 
 
 Ensemble AA
 ```{r}
-
 #**YW201319*
 aa201319_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201319_glm.tif")
 aa201319_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201319_h2o_glm.tif")
 aa201319_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201319_rf.tif")
 aa201319_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201319_h2o_rf.tif")
-auc_aa_201319 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201319.csv")
-auc_aa_201319_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201319_h2o.csv")
+aucaa_201319 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201319.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_aa201319 <- stack(x = c(aa201319_glm, aa201319_rf))
-weights_aa201319 <- auc_aa_201319$AUC / sum(auc_aa_201319$AUC)
+auc_aa201319 <- aucaa_201319[c(1,3) ,]
+weights_aa201319 <- auc_aa201319$AUC / sum(auc_aa201319$AUC)
 ensemble_pred_aa201319 <- weighted.mean(pred_stack_aa201319, w = weights_aa201319)
 plot(ensemble_pred_aa201319)
-writeRaster(ensemble_pred_aa201319, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201319.tif")
+writeRaster(ensemble_pred_aa201319, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201319.tif",)
 
 #using test data now to get AUC 
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2749,15 +2631,14 @@ test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201319 <- extract(ensemble_pred_aa201319, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201319 <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201319)
 auc_ensemble_aa201319<- PresenceAbsence ::auc(ensemble_auc_df_aa201319, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201319, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201319.csv")
 
 #h2o
 pred_stack_aa201319_h2o <- stack(x = c(aa201319_h2o_glm, aa201319_h2o_rf))
+auc_aa_201319_h2o <- aucaa_201319[c(2,4) ,]
 weights_aa201319_h2o <- auc_aa_201319_h2o$AUC / sum(auc_aa_201319_h2o$AUC)
-
 ensemble_pred_aa201319_h2o <- weighted.mean(pred_stack_aa201319_h2o, w = weights_aa201319_h2o)
 plot(ensemble_pred_aa201319_h2o)
-writeRaster(ensemble_pred_aa201319_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201319_h2o.tif")
+writeRaster(ensemble_pred_aa201319_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201319_h2o.tif")
 
 #using test data now to get AUC
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2765,23 +2646,28 @@ test_coords_aa <- test_data_aa[, c("Longitude", "Latitude")]
 test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201319_h2o <- extract(ensemble_pred_aa201319_h2o, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201319_h2o <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201319_h2o)
-auc_ensemble_aa201319_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201319, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201319_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201319_h2o.csv")
+auc_ensemble_aa201319_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201319_h2o, which.model = 1, na.rm = TRUE)
+
+aa201319_AUC_FINAL<- rbind(auc_ensemble_aa201319, auc_ensemble_aa201319_h2o)
+row.names(aa201319_AUC_FINAL) <- c("no_water", "water")
+write.csv(aa201319_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/aa201319_AUC.csv")
+
 
 #**YW201332*
 aa201332_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201332_glm.tif")
 aa201332_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201332_h2o_glm.tif")
 aa201332_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201332_rf.tif")
 aa201332_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201332_h2o_rf.tif")
-auc_aa_201332 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201332.csv")
-auc_aa_201332_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201332_h2o.csv")
+aucaa_201332 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201332.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_aa201332 <- stack(x = c(aa201332_glm, aa201332_rf))
-weights_aa201332 <- auc_aa_201332$AUC / sum(auc_aa_201332$AUC)
+auc_aa201332 <- aucaa_201332[c(1,3) ,]
+weights_aa201332 <- auc_aa201332$AUC / sum(auc_aa201332$AUC)
 ensemble_pred_aa201332 <- weighted.mean(pred_stack_aa201332, w = weights_aa201332)
 plot(ensemble_pred_aa201332)
-writeRaster(ensemble_pred_aa201332, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201332.tif")
+writeRaster(ensemble_pred_aa201332, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201332.tif",)
 
 #using test data now to get AUC 
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2790,15 +2676,14 @@ test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201332 <- extract(ensemble_pred_aa201332, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201332 <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201332)
 auc_ensemble_aa201332<- PresenceAbsence ::auc(ensemble_auc_df_aa201332, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201332, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201332.csv")
 
 #h2o
 pred_stack_aa201332_h2o <- stack(x = c(aa201332_h2o_glm, aa201332_h2o_rf))
+auc_aa_201332_h2o <- aucaa_201332[c(2,4) ,]
 weights_aa201332_h2o <- auc_aa_201332_h2o$AUC / sum(auc_aa_201332_h2o$AUC)
-
 ensemble_pred_aa201332_h2o <- weighted.mean(pred_stack_aa201332_h2o, w = weights_aa201332_h2o)
 plot(ensemble_pred_aa201332_h2o)
-writeRaster(ensemble_pred_aa201332_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201332_h2o.tif")
+writeRaster(ensemble_pred_aa201332_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201332_h2o.tif")
 
 #using test data now to get AUC
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2806,8 +2691,12 @@ test_coords_aa <- test_data_aa[, c("Longitude", "Latitude")]
 test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201332_h2o <- extract(ensemble_pred_aa201332_h2o, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201332_h2o <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201332_h2o)
-auc_ensemble_aa201332_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201332, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201332_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201332_h2o.csv")
+auc_ensemble_aa201332_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201332_h2o, which.model = 1, na.rm = TRUE)
+
+aa201332_AUC_FINAL<- rbind(auc_ensemble_aa201332, auc_ensemble_aa201332_h2o)
+row.names(aa201332_AUC_FINAL) <- c("no_water", "water")
+write.csv(aa201332_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/aa201332_AUC.csv")
+
 
 
 #**YW201345*
@@ -2815,15 +2704,16 @@ aa201345_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201345_glm.tif
 aa201345_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201345_h2o_glm.tif")
 aa201345_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201345_rf.tif")
 aa201345_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201345_h2o_rf.tif")
-auc_aa_201345 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201345.csv")
-auc_aa_201345_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201345_h2o.csv")
+aucaa_201345 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201345.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_aa201345 <- stack(x = c(aa201345_glm, aa201345_rf))
-weights_aa201345 <- auc_aa_201345$AUC / sum(auc_aa_201345$AUC)
+auc_aa201345 <- aucaa_201345[c(1,3) ,]
+weights_aa201345 <- auc_aa201345$AUC / sum(auc_aa201345$AUC)
 ensemble_pred_aa201345 <- weighted.mean(pred_stack_aa201345, w = weights_aa201345)
 plot(ensemble_pred_aa201345)
-writeRaster(ensemble_pred_aa201345, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201345.tif")
+writeRaster(ensemble_pred_aa201345, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201345.tif",)
 
 #using test data now to get AUC 
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2832,15 +2722,14 @@ test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201345 <- extract(ensemble_pred_aa201345, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201345 <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201345)
 auc_ensemble_aa201345<- PresenceAbsence ::auc(ensemble_auc_df_aa201345, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201345, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201345.csv")
 
 #h2o
 pred_stack_aa201345_h2o <- stack(x = c(aa201345_h2o_glm, aa201345_h2o_rf))
+auc_aa_201345_h2o <- aucaa_201345[c(2,4) ,]
 weights_aa201345_h2o <- auc_aa_201345_h2o$AUC / sum(auc_aa_201345_h2o$AUC)
-
 ensemble_pred_aa201345_h2o <- weighted.mean(pred_stack_aa201345_h2o, w = weights_aa201345_h2o)
 plot(ensemble_pred_aa201345_h2o)
-writeRaster(ensemble_pred_aa201345_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201345_h2o.tif")
+writeRaster(ensemble_pred_aa201345_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201345_h2o.tif")
 
 #using test data now to get AUC
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2848,24 +2737,28 @@ test_coords_aa <- test_data_aa[, c("Longitude", "Latitude")]
 test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201345_h2o <- extract(ensemble_pred_aa201345_h2o, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201345_h2o <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201345_h2o)
-auc_ensemble_aa201345_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201345, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201345_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201345_h2o.csv")
+auc_ensemble_aa201345_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201345_h2o, which.model = 1, na.rm = TRUE)
+
+aa201345_AUC_FINAL<- rbind(auc_ensemble_aa201345, auc_ensemble_aa201345_h2o)
+row.names(aa201345_AUC_FINAL) <- c("no_water", "water")
+write.csv(aa201345_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/aa201345_AUC.csv")
 
 
-#YW201919
+#**YW201919*
 aa201919_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201919_glm.tif")
 aa201919_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201919_h2o_glm.tif")
 aa201919_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201919_rf.tif")
 aa201919_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201919_h2o_rf.tif")
-auc_aa_201919 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201919.csv")
-auc_aa_201919_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201919_h2o.csv")
+aucaa_201919 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201919.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_aa201919 <- stack(x = c(aa201919_glm, aa201919_rf))
-weights_aa201919 <- auc_aa_201919$AUC / sum(auc_aa_201919$AUC)
+auc_aa201919 <- aucaa_201919[c(1,3) ,]
+weights_aa201919 <- auc_aa201919$AUC / sum(auc_aa201919$AUC)
 ensemble_pred_aa201919 <- weighted.mean(pred_stack_aa201919, w = weights_aa201919)
 plot(ensemble_pred_aa201919)
-writeRaster(ensemble_pred_aa201919, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201919.tif")
+writeRaster(ensemble_pred_aa201919, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201919.tif",)
 
 #using test data now to get AUC 
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2874,15 +2767,14 @@ test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201919 <- extract(ensemble_pred_aa201919, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201919 <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201919)
 auc_ensemble_aa201919<- PresenceAbsence ::auc(ensemble_auc_df_aa201919, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201919, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201919.csv")
 
 #h2o
 pred_stack_aa201919_h2o <- stack(x = c(aa201919_h2o_glm, aa201919_h2o_rf))
+auc_aa_201919_h2o <- aucaa_201919[c(2,4) ,]
 weights_aa201919_h2o <- auc_aa_201919_h2o$AUC / sum(auc_aa_201919_h2o$AUC)
-
 ensemble_pred_aa201919_h2o <- weighted.mean(pred_stack_aa201919_h2o, w = weights_aa201919_h2o)
 plot(ensemble_pred_aa201919_h2o)
-writeRaster(ensemble_pred_aa201919_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201919_h2o.tif")
+writeRaster(ensemble_pred_aa201919_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201919_h2o.tif")
 
 #using test data now to get AUC
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2890,9 +2782,11 @@ test_coords_aa <- test_data_aa[, c("Longitude", "Latitude")]
 test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201919_h2o <- extract(ensemble_pred_aa201919_h2o, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201919_h2o <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201919_h2o)
-auc_ensemble_aa201919_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201919, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201919_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201919_h2o.csv")
+auc_ensemble_aa201919_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201919_h2o, which.model = 1, na.rm = TRUE)
 
+aa201919_AUC_FINAL<- rbind(auc_ensemble_aa201919, auc_ensemble_aa201919_h2o)
+row.names(aa201919_AUC_FINAL) <- c("no_water", "water")
+write.csv(aa201919_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/aa201919_AUC.csv")
 
 
 #**YW201932*
@@ -2900,15 +2794,16 @@ aa201932_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201932_glm.tif
 aa201932_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201932_h2o_glm.tif")
 aa201932_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201932_rf.tif")
 aa201932_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201932_h2o_rf.tif")
-auc_aa_201932 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201932.csv")
-auc_aa_201932_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201932_h2o.csv")
+aucaa_201932 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201932.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_aa201932 <- stack(x = c(aa201932_glm, aa201932_rf))
-weights_aa201932 <- auc_aa_201932$AUC / sum(auc_aa_201932$AUC)
+auc_aa201932 <- aucaa_201932[c(1,3) ,]
+weights_aa201932 <- auc_aa201932$AUC / sum(auc_aa201932$AUC)
 ensemble_pred_aa201932 <- weighted.mean(pred_stack_aa201932, w = weights_aa201932)
 plot(ensemble_pred_aa201932)
-writeRaster(ensemble_pred_aa201932, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201932.tif")
+writeRaster(ensemble_pred_aa201932, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201932.tif",)
 
 #using test data now to get AUC 
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2917,15 +2812,14 @@ test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201932 <- extract(ensemble_pred_aa201932, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201932 <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201932)
 auc_ensemble_aa201932<- PresenceAbsence ::auc(ensemble_auc_df_aa201932, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201932, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201932.csv")
 
 #h2o
 pred_stack_aa201932_h2o <- stack(x = c(aa201932_h2o_glm, aa201932_h2o_rf))
+auc_aa_201932_h2o <- aucaa_201932[c(2,4) ,]
 weights_aa201932_h2o <- auc_aa_201932_h2o$AUC / sum(auc_aa_201932_h2o$AUC)
-
 ensemble_pred_aa201932_h2o <- weighted.mean(pred_stack_aa201932_h2o, w = weights_aa201932_h2o)
 plot(ensemble_pred_aa201932_h2o)
-writeRaster(ensemble_pred_aa201932_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201932_h2o.tif")
+writeRaster(ensemble_pred_aa201932_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201932_h2o.tif")
 
 #using test data now to get AUC
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2933,25 +2827,29 @@ test_coords_aa <- test_data_aa[, c("Longitude", "Latitude")]
 test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201932_h2o <- extract(ensemble_pred_aa201932_h2o, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201932_h2o <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201932_h2o)
-auc_ensemble_aa201932_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201932, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201932_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201932_h2o.csv")
+auc_ensemble_aa201932_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201932_h2o, which.model = 1, na.rm = TRUE)
+
+aa201932_AUC_FINAL<- rbind(auc_ensemble_aa201932, auc_ensemble_aa201932_h2o)
+row.names(aa201932_AUC_FINAL) <- c("no_water", "water")
+write.csv(aa201932_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/aa201932_AUC.csv")
 
 
 
-#**YW201945**
+#**YW201945*
 aa201945_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201945_glm.tif")
 aa201945_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201945_h2o_glm.tif")
 aa201945_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201945_rf.tif")
 aa201945_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa201945_h2o_rf.tif")
-auc_aa_201945 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201945.csv")
-auc_aa_201945_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_201945_h2o.csv")
+aucaa_201945 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucaa_201945.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_aa201945 <- stack(x = c(aa201945_glm, aa201945_rf))
-weights_aa201945 <- auc_aa_201945$AUC / sum(auc_aa_201945$AUC)
+auc_aa201945 <- aucaa_201945[c(1,3) ,]
+weights_aa201945 <- auc_aa201945$AUC / sum(auc_aa201945$AUC)
 ensemble_pred_aa201945 <- weighted.mean(pred_stack_aa201945, w = weights_aa201945)
 plot(ensemble_pred_aa201945)
-writeRaster(ensemble_pred_aa201945, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201945.tif")
+writeRaster(ensemble_pred_aa201945, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201945.tif",)
 
 #using test data now to get AUC 
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2960,15 +2858,14 @@ test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201945 <- extract(ensemble_pred_aa201945, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201945 <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201945)
 auc_ensemble_aa201945<- PresenceAbsence ::auc(ensemble_auc_df_aa201945, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201945, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201945.csv")
 
 #h2o
 pred_stack_aa201945_h2o <- stack(x = c(aa201945_h2o_glm, aa201945_h2o_rf))
+auc_aa_201945_h2o <- aucaa_201945[c(2,4) ,]
 weights_aa201945_h2o <- auc_aa_201945_h2o$AUC / sum(auc_aa_201945_h2o$AUC)
-
 ensemble_pred_aa201945_h2o <- weighted.mean(pred_stack_aa201945_h2o, w = weights_aa201945_h2o)
 plot(ensemble_pred_aa201945_h2o)
-writeRaster(ensemble_pred_aa201945_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa201945_h2o.tif")
+writeRaster(ensemble_pred_aa201945_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa201945_h2o.tif")
 
 #using test data now to get AUC
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -2976,9 +2873,11 @@ test_coords_aa <- test_data_aa[, c("Longitude", "Latitude")]
 test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa201945_h2o <- extract(ensemble_pred_aa201945_h2o, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa201945_h2o <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa201945_h2o)
-auc_ensemble_aa201945_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201945, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa201945_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa201945_h2o.csv")
+auc_ensemble_aa201945_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa201945_h2o, which.model = 1, na.rm = TRUE)
 
+aa201945_AUC_FINAL<- rbind(auc_ensemble_aa201945, auc_ensemble_aa201945_h2o)
+row.names(aa201945_AUC_FINAL) <- c("no_water", "water")
+write.csv(aa201945_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/aa201945_AUC.csv")
 
 
 #**YW202119*
@@ -2986,15 +2885,16 @@ aa202119_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202119_glm.tif
 aa202119_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202119_h2o_glm.tif")
 aa202119_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202119_rf.tif")
 aa202119_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202119_h2o_rf.tif")
-auc_aa_202119 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202119.csv")
-auc_aa_202119_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202119_h2o.csv")
+aucaa_202119 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa202119.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_aa202119 <- stack(x = c(aa202119_glm, aa202119_rf))
-weights_aa202119 <- auc_aa_202119$AUC / sum(auc_aa_202119$AUC)
+auc_aa202119 <- aucaa_202119[c(1,3) ,]
+weights_aa202119 <- auc_aa202119$AUC / sum(auc_aa202119$AUC)
 ensemble_pred_aa202119 <- weighted.mean(pred_stack_aa202119, w = weights_aa202119)
 plot(ensemble_pred_aa202119)
-writeRaster(ensemble_pred_aa202119, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa202119.tif")
+writeRaster(ensemble_pred_aa202119, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa202119.tif",)
 
 #using test data now to get AUC 
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -3003,15 +2903,14 @@ test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa202119 <- extract(ensemble_pred_aa202119, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa202119 <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa202119)
 auc_ensemble_aa202119<- PresenceAbsence ::auc(ensemble_auc_df_aa202119, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa202119, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa202119.csv")
 
 #h2o
 pred_stack_aa202119_h2o <- stack(x = c(aa202119_h2o_glm, aa202119_h2o_rf))
+auc_aa_202119_h2o <- aucaa_202119[c(2,4) ,]
 weights_aa202119_h2o <- auc_aa_202119_h2o$AUC / sum(auc_aa_202119_h2o$AUC)
-
 ensemble_pred_aa202119_h2o <- weighted.mean(pred_stack_aa202119_h2o, w = weights_aa202119_h2o)
 plot(ensemble_pred_aa202119_h2o)
-writeRaster(ensemble_pred_aa202119_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa202119_h2o.tif")
+writeRaster(ensemble_pred_aa202119_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa202119_h2o.tif")
 
 #using test data now to get AUC
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -3019,8 +2918,11 @@ test_coords_aa <- test_data_aa[, c("Longitude", "Latitude")]
 test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa202119_h2o <- extract(ensemble_pred_aa202119_h2o, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa202119_h2o <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa202119_h2o)
-auc_ensemble_aa202119_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa202119, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa202119_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa202119_h2o.csv")
+auc_ensemble_aa202119_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa202119_h2o, which.model = 1, na.rm = TRUE)
+
+aa202119_AUC_FINAL<- rbind(auc_ensemble_aa202119, auc_ensemble_aa202119_h2o)
+row.names(aa202119_AUC_FINAL) <- c("no_water", "water")
+write.csv(aa202119_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/aa202119_AUC.csv")
 
 
 #**YW202132*
@@ -3028,15 +2930,16 @@ aa202132_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202132_glm.tif
 aa202132_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202132_h2o_glm.tif")
 aa202132_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202132_rf.tif")
 aa202132_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202132_h2o_rf.tif")
-auc_aa_202132 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202132.csv")
-auc_aa_202132_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202132_h2o.csv")
+aucaa_202132 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucaa_202132.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_aa202132 <- stack(x = c(aa202132_glm, aa202132_rf))
-weights_aa202132 <- auc_aa_202132$AUC / sum(auc_aa_202132$AUC)
+auc_aa202132 <- aucaa_202132[c(1,3) ,]
+weights_aa202132 <- auc_aa202132$AUC / sum(auc_aa202132$AUC)
 ensemble_pred_aa202132 <- weighted.mean(pred_stack_aa202132, w = weights_aa202132)
 plot(ensemble_pred_aa202132)
-writeRaster(ensemble_pred_aa202132, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa202132.tif")
+writeRaster(ensemble_pred_aa202132, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa202132.tif",)
 
 #using test data now to get AUC 
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -3045,15 +2948,14 @@ test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa202132 <- extract(ensemble_pred_aa202132, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa202132 <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa202132)
 auc_ensemble_aa202132<- PresenceAbsence ::auc(ensemble_auc_df_aa202132, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa202132, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa202132.csv")
 
 #h2o
 pred_stack_aa202132_h2o <- stack(x = c(aa202132_h2o_glm, aa202132_h2o_rf))
+auc_aa_202132_h2o <- aucaa_202132[c(2,4) ,]
 weights_aa202132_h2o <- auc_aa_202132_h2o$AUC / sum(auc_aa_202132_h2o$AUC)
-
 ensemble_pred_aa202132_h2o <- weighted.mean(pred_stack_aa202132_h2o, w = weights_aa202132_h2o)
 plot(ensemble_pred_aa202132_h2o)
-writeRaster(ensemble_pred_aa202132_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa202132_h2o.tif")
+writeRaster(ensemble_pred_aa202132_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa202132_h2o.tif")
 
 #using test data now to get AUC
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -3061,8 +2963,12 @@ test_coords_aa <- test_data_aa[, c("Longitude", "Latitude")]
 test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa202132_h2o <- extract(ensemble_pred_aa202132_h2o, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa202132_h2o <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa202132_h2o)
-auc_ensemble_aa202132_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa202132, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa202132_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa202132_h2o.csv")
+auc_ensemble_aa202132_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa202132_h2o, which.model = 1, na.rm = TRUE)
+
+aa202132_AUC_FINAL<- rbind(auc_ensemble_aa202132, auc_ensemble_aa202132_h2o)
+row.names(aa202132_AUC_FINAL) <- c("no_water", "water")
+write.csv(aa202132_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/aa202132_AUC.csv")
+
 
 
 #**YW202145*
@@ -3070,15 +2976,16 @@ aa202145_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202145_glm.tif
 aa202145_h2o_glm <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202145_h2o_glm.tif")
 aa202145_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202145_rf.tif")
 aa202145_h2o_rf <- raster("/Users/nooni/Box/RNR597_data/prediction/aa202145_h2o_rf.tif")
-auc_aa_202145 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202145.csv")
-auc_aa_202145_h2o <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/auc_aa_202145_h2o.csv")
+aucaa_202145 <- read.csv("C:/Users/nooni/Box/RNR597_data/AUC/aucaa_202145.csv", row.names = 1)
+
 
 #ensemble no water
 pred_stack_aa202145 <- stack(x = c(aa202145_glm, aa202145_rf))
-weights_aa202145 <- auc_aa_202145$AUC / sum(auc_aa_202145$AUC)
+auc_aa202145 <- aucaa_202145[c(1,3) ,]
+weights_aa202145 <- auc_aa202145$AUC / sum(auc_aa202145$AUC)
 ensemble_pred_aa202145 <- weighted.mean(pred_stack_aa202145, w = weights_aa202145)
 plot(ensemble_pred_aa202145)
-writeRaster(ensemble_pred_aa202145, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa202145.tif")
+writeRaster(ensemble_pred_aa202145, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa202145.tif",)
 
 #using test data now to get AUC 
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -3087,15 +2994,14 @@ test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa202145 <- extract(ensemble_pred_aa202145, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa202145 <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa202145)
 auc_ensemble_aa202145<- PresenceAbsence ::auc(ensemble_auc_df_aa202145, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa202145, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa202145.csv")
 
 #h2o
 pred_stack_aa202145_h2o <- stack(x = c(aa202145_h2o_glm, aa202145_h2o_rf))
+auc_aa_202145_h2o <- aucaa_202145[c(2,4) ,]
 weights_aa202145_h2o <- auc_aa_202145_h2o$AUC / sum(auc_aa_202145_h2o$AUC)
-
 ensemble_pred_aa202145_h2o <- weighted.mean(pred_stack_aa202145_h2o, w = weights_aa202145_h2o)
 plot(ensemble_pred_aa202145_h2o)
-writeRaster(ensemble_pred_aa202145_h2o, file = "/Users/nooni/Box/RNR597_data/prediction/ensemble_pred_aa202145_h2o.tif")
+writeRaster(ensemble_pred_aa202145_h2o, file = "/Users/nooni/Box/RNR597_data/prediction_4.29.25/ensemble_pred_aa202145_h2o.tif")
 
 #using test data now to get AUC
 test_data_aa <- read.csv(here("Natalie/data_cleaned/test_train/test_data_aa.csv"))
@@ -3103,15 +3009,50 @@ test_coords_aa <- test_data_aa[, c("Longitude", "Latitude")]
 test_presence_aa <- as.numeric(test_data_aa$aa)
 ensemble_test_pred_aa202145_h2o <- extract(ensemble_pred_aa202145_h2o, test_coords_aa, pos_label = 1)
 ensemble_auc_df_aa202145_h2o <- data.frame(test_data_aa$X, test_presence_aa, ensemble_test_pred_aa202145_h2o)
-auc_ensemble_aa202145_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa202145, which.model = 1, na.rm = TRUE)
-write.csv(auc_ensemble_aa202145_h2o, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/auc_ensemble_aa202145_h2o.csv")
+auc_ensemble_aa202145_h2o<- PresenceAbsence ::auc(ensemble_auc_df_aa202145_h2o, which.model = 1, na.rm = TRUE)
 
-
+aa202145_AUC_FINAL<- rbind(auc_ensemble_aa202145, auc_ensemble_aa202145_h2o)
+row.names(aa202145_AUC_FINAL) <- c("no_water", "water")
+write.csv(aa202145_AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/aa202145_AUC.csv")
 ```
 
 
 
+Making one datatable with AUC ensemble
+```{r}
+#**CQ*
+cq_Ensemble_AUC <- rbind(cq201319_AUC_FINAL, cq201332_AUC_FINAL, cq201345_AUC_FINAL, cq201919_AUC_FINAL, cq201932_AUC_FINAL,  cq201945_AUC_FINAL, cq202119_AUC_FINAL, cq202132_AUC_FINAL, cq202145_AUC_FINAL)
 
+cq_Ensemble_AUC$YW <- c("201319", "201319","201332", "201332", "201345", "201345", "201919", "201919","201932", "201932", "201945", "201945", "202119", "202119", "202132", "202132","202145", "202145")
+
+cq_Ensemble_AUC$Water <- c("no_water", "water", "no_water", "water", "no_water", "water", "no_water", "water", "no_water", "water","no_water", "water", "no_water", "water", "no_water", "water", "no_water", "water")
+
+cq_Ensemble_AUC$species <- c("cq", "cq", "cq", "cq","cq", "cq","cq", "cq","cq", "cq","cq", "cq","cq", "cq","cq", "cq","cq", "cq")
+
+
+#**CT*
+ct_Ensemble_AUC <- rbind(ct201319_AUC_FINAL, ct201332_AUC_FINAL, ct201345_AUC_FINAL, ct201919_AUC_FINAL, ct201932_AUC_FINAL,  ct201945_AUC_FINAL, ct202119_AUC_FINAL, ct202132_AUC_FINAL, ct202145_AUC_FINAL)
+
+ct_Ensemble_AUC$YW <- c("201319", "201319","201332", "201332", "201345", "201345", "201919", "201919","201932", "201932", "201945", "201945", "202119", "202119", "202132", "202132","202145", "202145")
+
+ct_Ensemble_AUC$Water <- c("no_water", "water", "no_water", "water", "no_water", "water", "no_water", "water", "no_water", "water","no_water", "water", "no_water", "water", "no_water", "water", "no_water", "water")
+
+ct_Ensemble_AUC$species <- c("ct", "ct", "ct", "ct","ct", "ct","ct", "ct","ct", "ct","ct", "ct","ct", "ct","ct", "ct","ct", "ct")
+
+#**AA*
+AA_Ensemble_AUC <- rbind(aa201319_AUC_FINAL, aa201332_AUC_FINAL, aa201345_AUC_FINAL, aa201919_AUC_FINAL, aa201932_AUC_FINAL,  aa201945_AUC_FINAL, aa202119_AUC_FINAL, aa202132_AUC_FINAL, aa202145_AUC_FINAL)
+
+AA_Ensemble_AUC$YW <- c("201319", "201319","201332", "201332", "201345", "201345", "201919", "201919","201932", "201932", "201945", "201945", "202119", "202119", "202132", "202132","202145", "202145")
+
+AA_Ensemble_AUC$Water <- c("no_water", "water", "no_water", "water", "no_water", "water", "no_water", "water", "no_water", "water","no_water", "water", "no_water", "water", "no_water", "water", "no_water", "water")
+
+AA_Ensemble_AUC$species <- c("aa", "aa", "aa", "aa","aa", "aa","aa", "aa","aa", "aa","aa", "aa","aa", "aa","aa", "aa","aa", "aa")
+
+AUC_FINAL <- rbind(cq_Ensemble_AUC, ct_Ensemble_AUC, AA_Ensemble_AUC)
+
+row.names(AUC_FINAL) <- 1:54
+write.csv(AUC_FINAL, file = "C:/Users/nooni/Box/RNR597_data/AUC_ensemble/AUC_FINAL.csv")
+```
 
 
 
