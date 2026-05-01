@@ -1,0 +1,164 @@
+# ============================================================
+#  Aedes aegypti  |  Biomod2 Ensemble Maps  |  Week 45, 2019
+#  Two models: with & without NDVI/MNDWI
+#  Outputs: separate PNGs + difference map
+# ============================================================
+
+library(biomod2)
+library(terra)
+library(ggplot2)
+library(tidyterra)
+library(ggspatial)   # scale bar + north arrow
+library(sf)
+library(tigris)      # Maricopa county boundary
+library(maptiles)    # roads/streets basemap tiles
+
+options(tigris_use_cache = TRUE)
+
+# ------------------------------------------------------------
+# 0.  USER INPUTS  <<< EDIT THESE TWO LINES >>>
+# ------------------------------------------------------------
+bm_with    <- my_biomod_object_with_ndvi     # <<< EDIT: biomod2 obj WITH NDVI/MNDWI
+bm_without <- my_biomod_object_without_ndvi  # <<< EDIT: biomod2 obj WITHOUT NDVI/MNDWI
+
+
+# ------------------------------------------------------------
+# 1.  Extract Week 45, 2019 ensemble raster from each object
+# ------------------------------------------------------------
+
+# Helper: pull the ensemble mean raster for a given projection name
+get_ensemble_raster <- function(bm_obj, proj_name) {
+  # BIOMOD_EnsembleForecasting stores results here:
+  r <- get_predictions(bm_obj, model = "EMmean", proj.name = proj_name)
+  # biomod2 stores suitability 0-1000; rescale to 0-1
+  r / 1000
+}
+
+# *** Adjust proj_name to match what you used in BIOMOD_EnsembleForecasting() ***
+proj_name <- "Week45_2019"   # <<< EDIT if your projection name differs
+
+r_with    <- get_ensemble_raster(bm_with,    proj_name)
+r_without <- get_ensemble_raster(bm_without, proj_name)
+
+
+# ------------------------------------------------------------
+# 2.  Maricopa county boundary + basemap tiles
+# ------------------------------------------------------------
+maricopa <- tigris::counties(state = "AZ", cb = TRUE) |>
+  dplyr::filter(NAME == "Maricopa") |>
+  sf::st_transform(4326)
+
+# Crop rasters to county
+r_with    <- terra::crop(r_with,    terra::vect(maricopa), mask = TRUE)
+r_without <- terra::crop(r_without, terra::vect(maricopa), mask = TRUE)
+
+# Download road/street tiles (OpenStreetMap)
+tiles <- maptiles::get_tiles(
+  x       = maricopa,
+  provider = "OpenStreetMap",
+  zoom    = 10,       # increase for more detail; 10 is a good balance for county
+  cachedir = tempdir()
+)
+tiles_sf <- terra::as.polygons(tiles, dissolve = FALSE)  # keep as SpatRaster for ggplot
+
+
+# ------------------------------------------------------------
+# 3.  Shared plot theme & palette
+# ------------------------------------------------------------
+suit_palette <- scale_fill_gradientn(
+  colours  = c("#f7fbff", "#9ecae1", "#2171b5", "#08306b"),
+  values   = scales::rescale(c(0, 0.25, 0.6, 1)),
+  limits   = c(0, 1),
+  na.value = NA,
+  name     = "Suitability\n(0 – 1)"
+)
+
+base_theme <- theme_void(base_size = 13) +
+  theme(
+    plot.title    = element_text(face = "bold", hjust = 0.5, size = 15),
+    plot.subtitle = element_text(hjust = 0.5, colour = "grey40", size = 11),
+    legend.position      = "right",
+    legend.title         = element_text(size = 10),
+    plot.background      = element_rect(fill = "white", colour = NA),
+    plot.margin          = margin(10, 10, 10, 10)
+  )
+
+make_map <- function(raster_obj, title_str) {
+  ggplot() +
+    # --- basemap tiles ---
+    layer_spatial(tiles) +
+    # --- suitability raster (semi-transparent so roads show through) ---
+    geom_spatraster(data = raster_obj, alpha = 0.75) +
+    suit_palette +
+    # --- county boundary ---
+    geom_sf(data = maricopa, fill = NA, colour = "black", linewidth = 0.7) +
+    # --- map furniture ---
+    annotation_scale(location = "bl", width_hint = 0.25,
+                     text_col = "grey20", line_col = "grey20") +
+    annotation_north_arrow(location = "tr", which_north = "true",
+                           style = north_arrow_fancy_orienteering(
+                             text_col = "grey20", line_col = "grey20", fill = c("white","grey20")
+                           )) +
+    labs(
+      title    = title_str,
+      subtitle = "Aedes aegypti  |  Week 45, 2019  |  Maricopa County, AZ"
+    ) +
+    base_theme
+}
+
+
+# ------------------------------------------------------------
+# 4.  Map 1 — WITH NDVI / MNDWI
+# ------------------------------------------------------------
+p_with <- make_map(r_with, "Habitat Suitability  (with NDVI & MNDWI)")
+ggsave("map_with_ndvi_mndwi.png", p_with,
+       width = 10, height = 8, dpi = 300, bg = "white")
+
+
+# ------------------------------------------------------------
+# 5.  Map 2 — WITHOUT NDVI / MNDWI
+# ------------------------------------------------------------
+p_without <- make_map(r_without, "Habitat Suitability  (without NDVI & MNDWI)")
+ggsave("map_without_ndvi_mndwi.png", p_without,
+       width = 10, height = 8, dpi = 300, bg = "white")
+
+
+# ------------------------------------------------------------
+# 6.  Difference map  (with − without)
+# ------------------------------------------------------------
+r_diff <- r_with - r_without
+
+diff_lim <- max(abs(terra::minmax(r_diff)), na.rm = TRUE)   # symmetric limits
+
+p_diff <- ggplot() +
+  layer_spatial(tiles) +
+  geom_spatraster(data = r_diff, alpha = 0.80) +
+  scale_fill_gradientn(
+    colours  = c("#d73027", "#f7f7f7", "#1a9850"),   # red = lower with NDVI; green = higher
+    limits   = c(-diff_lim, diff_lim),
+    na.value = NA,
+    name     = "Δ Suitability\n(with − without)"
+  ) +
+  geom_sf(data = maricopa, fill = NA, colour = "black", linewidth = 0.7) +
+  annotation_scale(location = "bl", width_hint = 0.25,
+                   text_col = "grey20", line_col = "grey20") +
+  annotation_north_arrow(location = "tr", which_north = "true",
+                         style = north_arrow_fancy_orienteering(
+                           text_col = "grey20", line_col = "grey20", fill = c("white","grey20")
+                         )) +
+  labs(
+    title    = "Difference in Habitat Suitability\n(with NDVI/MNDWI  −  without)",
+    subtitle = "Aedes aegypti  |  Week 45, 2019  |  Maricopa County, AZ"
+  ) +
+  base_theme
+
+ggsave("map_difference_ndvi_mndwi.png", p_diff,
+       width = 10, height = 8, dpi = 300, bg = "white")
+
+
+# ------------------------------------------------------------
+# 7.  Done
+# ------------------------------------------------------------
+message("✓  Saved:  map_with_ndvi_mndwi.png")
+message("✓  Saved:  map_without_ndvi_mndwi.png")
+message("✓  Saved:  map_difference_ndvi_mndwi.png")
